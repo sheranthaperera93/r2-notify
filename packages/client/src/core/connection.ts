@@ -25,8 +25,9 @@ export class Connection {
    * @param {((data: any) => void)} onMessage - A callback function to handle incoming messages from the WebSocket connection.
    * @param {((ev: CloseEvent) => void)} onClose - A callback function to handle the WebSocket connection being closed.
    * @param {(() => void)} [onOpen] - An optional callback function to handle the WebSocket connection being opened.
+   * @param {(() => void)} [onError] - An optional callback function to handle the WebSocket connection on error.
    */
-  connect(onMessage: (data: any) => void, onClose: (ev: CloseEvent) => void, onOpen?: () => void) {
+  connect(onMessage: (data: any) => void, onClose: (ev: CloseEvent) => void, onOpen?: () => void, onError?: (ev: Event) => void) {
     const headersParam = this.token ? `?token=${encodeURIComponent(this.token)}` : "";
     const ws = new WebSocket(`${this.url}${headersParam}`);
     this.ws = ws;
@@ -72,6 +73,7 @@ export class Connection {
      */
     ws.onerror = (err) => {
       if (this.debug) console.error("[r2] error", err);
+      onError?.(err);
     };
   }
 

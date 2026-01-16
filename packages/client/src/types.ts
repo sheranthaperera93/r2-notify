@@ -3,6 +3,10 @@ export type NotifyEvent =
   | "newNotification" // incremental updates
   | "listConfigurations"; // config/meta
 
+export type ClientLifecycleEvent = "connected" | "disconnected" | "error";
+
+export type R2NotifyClientEvent = NotifyEvent | ClientLifecycleEvent;
+
 export type NotifyAction =
   // Mark as Read
   | "markAsRead"
