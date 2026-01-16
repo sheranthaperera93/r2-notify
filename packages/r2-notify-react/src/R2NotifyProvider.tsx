@@ -11,6 +11,7 @@ export interface R2NotifyProviderProps extends R2NotifyReactOptions {
 export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
   children,
   autoConnect = true,
+  clientId,
   ...opts
 }) => {
   const [state, setState] = React.useState<R2NotifyState>({ isConnected: false });
@@ -18,7 +19,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
   // Keep a stable client instance across renders while options remain the same
   const clientRef = React.useRef<R2NotifyClient | null>(null);
   if (!clientRef.current) {
-    clientRef.current = new R2NotifyClient(opts);
+    clientRef.current = new R2NotifyClient({ ...opts, clientId });
   }
 
   React.useEffect(() => {
@@ -51,11 +52,11 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
 
     // Optional: expose internal state transitions via debug logs if needed
     if (opts.debug) {
-      console.log("[r2-react] provider mount; autoConnect =", autoConnect);
+      console.log("[r2-react] provider mount; autoConnect =", autoConnect, "clientId =", clientId);
     }
 
     if (autoConnect) {
-      client.connect({ });
+      client.connect({});
       // Update connection state when onOpen fires (handled in client via heartbeat start)
       // We don't have a direct onOpen event, so we set connected on first event or rely on heartbeat success.
       // If you want a more explicit connected callback, you can enhance the client to emit 'connected' custom event.

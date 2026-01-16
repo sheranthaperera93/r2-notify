@@ -3,6 +3,7 @@ export type WSLike = WebSocket; // Browser WebSocket
 export class Connection {
   private ws?: WSLike;
   private url: string;
+  private clientId: string;
   private token?: string;
   private debug: boolean;
 
@@ -10,11 +11,13 @@ export class Connection {
    * Creates a new Connection instance.
    *
    * @param {string} url - The URL of the WebSocket endpoint.
+   * @param {string} clientId - The unique identification of the client
    * @param {string} [token] - The authentication token to use for the connection. If not provided, the connection will not be authenticated.
    * @param {boolean} [debug=false] - Whether to enable debug logging for the connection.
    */
-  constructor(url: string, token?: string, debug: boolean = false) {
+  constructor(url: string, clientId: string, token?: string, debug: boolean = false) {
     this.url = url;
+    this.clientId = clientId;
     this.token = token;
     this.debug = debug;
   }
@@ -28,8 +31,8 @@ export class Connection {
    * @param {(() => void)} [onError] - An optional callback function to handle the WebSocket connection on error.
    */
   connect(onMessage: (data: any) => void, onClose: (ev: CloseEvent) => void, onOpen?: () => void, onError?: (ev: Event) => void) {
-    const headersParam = this.token ? `?token=${encodeURIComponent(this.token)}` : "";
-    const ws = new WebSocket(`${this.url}${headersParam}`);
+    const headersParam = this.token ? `&token=${encodeURIComponent(this.token)}` : "";
+    const ws = new WebSocket(`${this.url}?userId=${encodeURIComponent(this.clientId)}${headersParam}`);
     this.ws = ws;
 
     /**

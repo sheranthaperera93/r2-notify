@@ -35,9 +35,9 @@ export function useNotifications() {
   const { state } = useR2Notify();
   return {
     isConnected: state.isConnected,
-    notificationList: state.notificationList,
-    newNotificationList: state.newNotificationList,
-    configuration: state.notificationListConfiguration,
+    listNotifications: state.listNotifications,
+    newNotification: state.newNotification,
+    listConfigurations: state.listConfigurations,
     lastError: state.lastError,
   };
 }

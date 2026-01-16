@@ -34,6 +34,7 @@ export interface ServerEventEnvelope<TEvent = NotifyEvent, TPayload = unknown> {
 
 export interface R2NotifyClientOptions {
   url: string; // wss://...
+  clientId: string; // unique client identifier
   token?: string; // JWT or API key for auth (optional)
   reconnect?: boolean;
   reconnectDelayMs?: number;
