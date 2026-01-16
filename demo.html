@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>r2-notify-client demo</title>
+  </head>
+  <body>
+    <h1>r2-notify-client demo</h1>
+    <pre id="log"></pre>
+    <script type="module">
+      import { R2NotifyClient } from "./dist/index.js"; // after `npm run build`
+
+      const log = (msg, ...rest) => {
+        document.getElementById("log").textContent += `\n${msg} ${rest.map((r) => JSON.stringify(r)).join(" ")}`;
+        console.log(msg, ...rest);
+      };
+
+      const client = new R2NotifyClient({
+        url: "ws://localhost:8081/ws?userId=SheranthaPerera", // change if needed
+        token: "", // optional
+        debug: true,
+      });
+
+      client
+        .on("listNotifications", (list) => log("[listNotifications]", list))
+        .on("newNotification", (updates) => log("[newNotification]", updates))
+        .on("listConfigurations", (cfg) => log("[listConfigurations]", cfg))
+        .connect();
+
+      // Try an action after a delay
+    //   setTimeout(() => {
+    //     log("Sending markAsRead()");
+    //     client.markAsRead();
+    //   }, 2000);
+    </script>
+  </body>
+</html>
