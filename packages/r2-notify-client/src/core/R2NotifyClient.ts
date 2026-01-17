@@ -1,7 +1,7 @@
 import EventEmitter from "eventemitter3";
 import { Connection } from "./connection";
 import { makeAction, isServerEventEnvelope, type EventHandlers } from "./protocol";
-import type { R2NotifyClientOptions, NotifyAction, NotifyEvent, R2NotifyClientEvent } from "../types";
+import type { R2NotifyClientOptions, NotifyAction, NotifyEvent, R2NotifyClientEvent, ServerEventEnvelope } from "../types";
 
 export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   private conn: Connection;
@@ -10,6 +10,7 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   private heartbeatTimer?: number;
   private reconnectTimer?: number;
   private closedByUser = false;
+  private isConnected = false;
 
   constructor(options: R2NotifyClientOptions) {
     super();
@@ -26,6 +27,10 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   }
 
   connect(handlers?: EventHandlers) {
+    if (this.isConnected) return this;
+
+    this.isConnected = true;
+
     if (handlers) {
       for (const [evt, fn] of Object.entries(handlers)) {
         this.on(evt as NotifyEvent, fn as any);
@@ -34,7 +39,8 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
 
     const onMessage = (data: any) => {
       if (isServerEventEnvelope(data)) {
-        const { event, payload } = data;
+        const { event } = data;
+        const payload = "payload" in data ? data.payload : data.data;
         if (this.opts.debug) console.log("[r2] <-", event, payload);
         this.emit(event as NotifyEvent, payload as any);
       } else {
@@ -55,12 +61,13 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
       if (!this.closedByUser && this.opts.reconnect) {
         this.scheduleReconnect();
       }
+      this.isConnected = false;
     };
 
     const onError = (err: Event | Error) => {
       const errorObj = err instanceof Error ? err : new Error((err as Event)?.type ? `WebSocket error: ${(err as Event).type}` : "WebSocket error");
       if (this.opts.debug) console.error("[r2] ws error", errorObj);
-      this.emit("error", errorObj); // ✅ payload: Error (types match now)
+      this.emit("error", errorObj);
     };
 
     this.conn.connect(onMessage, onClose, onOpen, onError);

@@ -27,7 +27,6 @@ export type Notification = {
   updatedAt: string;
 };
 export type NotificationConfig = {
-  event: "string"
   id: string;
   userId: string;
   enableNotification: boolean
@@ -36,7 +35,7 @@ export type NotificationConfig = {
 export interface R2NotifyState {
   isConnected: boolean;
   lastError?: Error;
-  listNotifications?: {event: string, data: Notification[]};
+  listNotifications?: Notification[];
   newNotification?: Notification;
   listConfigurations?: NotificationConfig;
 }

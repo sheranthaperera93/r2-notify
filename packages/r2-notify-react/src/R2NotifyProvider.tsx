@@ -1,7 +1,7 @@
 
 import React from "react";
 import { R2NotifyClient } from "r2-notify-client";
-import type { R2NotifyReactOptions, R2NotifyState } from "./types";
+import type { Notification, NotificationConfig, R2NotifyReactOptions, R2NotifyState } from "./types";
 import { R2NotifyContext } from "./context";
 
 export interface R2NotifyProviderProps extends R2NotifyReactOptions {
@@ -15,7 +15,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
   ...opts
 }) => {
   const [state, setState] = React.useState<R2NotifyState>({ isConnected: false });
-
+  
   // Keep a stable client instance across renders while options remain the same
   const clientRef = React.useRef<R2NotifyClient | null>(null);
   if (!clientRef.current) {
@@ -23,6 +23,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
   }
 
   React.useEffect(() => {
+
     const client = clientRef.current!;
     let isMounted = true;
 
@@ -35,20 +36,31 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
       setState((s) => ({ ...s, isConnected: false }));
     };
 
-    const onNotificationList = (payload: unknown) => {
-      setState((s) => ({ ...s, notificationList: payload as any }));
+    const onListNotifications = (payload: Notification[]) => {
+      if (!isMounted) return;
+      if (opts.debug) console.debug("on list notifications", payload);
+      const list = Array.isArray(payload) ? payload : [];
+      setState((s) => ({ ...s, listNotifications: payload as Notification[] }));
     };
-    const onNewNotificationList = (payload: unknown) => {
-      setState((s) => ({ ...s, newNotificationList: payload as any }));
+    const onNewNotification = (payload: Notification) => {
+      if (!isMounted) return;
+       if (opts.debug) console.debug("on new notification", payload);
+      const n = payload as Notification;
+      if (!n.id) return;
+      setState((s) => ({ ...s, newNotification: payload as Notification }));
     };
-    const onConfig = (payload: unknown) => {
-      setState((s) => ({ ...s, notificationListConfiguration: payload as any }));
+    const onListConfigurations = (payload: NotificationConfig) => {
+      if (!isMounted) return;
+      if (opts.debug) console.debug("on list configurations", payload);
+      setState((s) => ({ ...s, listConfigurations: payload as NotificationConfig }));
     };
 
     // Hook into client events
-    client.on("listNotifications", onNotificationList);
-    client.on("newNotification", onNewNotificationList);
-    client.on("listConfigurations", onConfig);
+    client.on("connected", handleConnected);
+    client.on("disconnected", handleClosed);
+    client.on("listNotifications", onListNotifications);
+    client.on("newNotification", onNewNotification);
+    client.on("listConfigurations", onListConfigurations);
 
     // Optional: expose internal state transitions via debug logs if needed
     if (opts.debug) {
@@ -62,24 +74,23 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
       // If you want a more explicit connected callback, you can enhance the client to emit 'connected' custom event.
       // For now, we optimistically set connected after a small delay if no close occurred.
       const t = setTimeout(() => {
-        setState((s) => ({ ...s, isConnected: client["conn"]?.isOpen?.() ?? true }));
+        setState((s) => ({ ...s, isConnected: client["conn"]?.isOpen?.() ?? s.isConnected }));
       }, 300);
       return () => clearTimeout(t);
     }
 
     return () => {
       isMounted = false;
-      client.off("listNotifications", onNotificationList);
-      client.off("newNotification", onNewNotificationList);
-      client.off("listConfigurations", onConfig);
-      handleConnected();
-      handleClosed();
+      client.off('connected', handleConnected);
+      client.off('disconnected', handleClosed);
+      client.off("listNotifications", onListNotifications);
+      client.off("newNotification", onNewNotification);
+      client.off("listConfigurations", onListConfigurations);
       if (autoConnect) {
         client.close();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once
+  }, [autoConnect, clientId, opts.debug]);
 
   const actions = React.useMemo(() => {
     const client = clientRef.current!;
@@ -103,10 +114,11 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
   const value = React.useMemo(
     () => ({
       client: clientRef.current,
+      clientId,
       state,
       actions,
     }),
-    [state, actions],
+    [state, actions, clientId],
   );
 
   return <R2NotifyContext.Provider value={value}>{children}</R2NotifyContext.Provider>;

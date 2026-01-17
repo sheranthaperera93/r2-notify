@@ -101,7 +101,7 @@ const App: React.FC = () => {
   const [clientId, setClientId] = useState(`client-1768563100345`);
 
   return (
-    <R2NotifyProvider url={wsUrl} clientId={clientId} autoConnect={true}>
+    <R2NotifyProvider url={wsUrl} clientId={clientId} autoConnect={true} debug={true}>
       <AppContent
         wsUrl={wsUrl}
         clientId={clientId}

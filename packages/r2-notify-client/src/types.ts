@@ -23,13 +23,13 @@ export type NotifyAction =
   | "toggleNotificationStatus";
 
 export interface ActionEnvelope<TPayload = unknown> {
-  action: NotifyAction;
-  payload?: TPayload;
+  event: NotifyAction;
+  data?: TPayload;
 }
 
 export interface ServerEventEnvelope<TEvent = NotifyEvent, TPayload = unknown> {
   event: TEvent;
-  payload: TPayload;
+  data: TPayload;
 }
 
 export interface R2NotifyClientOptions {

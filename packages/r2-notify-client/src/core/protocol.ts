@@ -7,11 +7,8 @@ import type { ActionEnvelope, NotifyAction, NotifyEvent, ServerEventEnvelope } f
  * @returns An ActionEnvelope with the given action and optional payload.
  * @template TPayload The type of the payload.
  */
-export function makeAction<TPayload = unknown>(
-  action: NotifyAction,
-  payload?: TPayload,
-): ActionEnvelope<TPayload> {
-  return { action, payload };
+export function makeAction<TPayload = unknown>(action: NotifyAction, data?: TPayload): ActionEnvelope<TPayload> {
+  return { event: action, data };
 }
 
 /**
@@ -21,8 +18,8 @@ export function makeAction<TPayload = unknown>(
  * @param x The value to check.
  * @returns True if x is a ServerEventEnvelope, false otherwise.
  */
-export function isServerEventEnvelope(x: unknown): x is ServerEventEnvelope {
-  return !!x && typeof x === "object" && "event" in (x as any);
+export function isServerEventEnvelope(x: any): x is ServerEventEnvelope {
+  return !!x && typeof x === "object" && typeof x.event === "string" && ("payload" in x || "data" in x);
 }
 
 export type EventHandlers = Partial<Record<NotifyEvent, (payload: any) => void>>;
