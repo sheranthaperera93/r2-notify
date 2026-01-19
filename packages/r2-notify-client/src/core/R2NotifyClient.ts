@@ -41,21 +41,21 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
       if (isServerEventEnvelope(data)) {
         const { event } = data;
         const payload = "payload" in data ? data.payload : data.data;
-        if (this.opts.debug) console.log("[r2] <-", event, payload);
+        if (this.opts.debug) console.log("[r2 client] <-", event, payload);
         this.emit(event as NotifyEvent, payload as any);
       } else {
-        if (this.opts.debug) console.warn("[r2] unknown message", data);
+        if (this.opts.debug) console.warn("[r2 client] unknown message", data);
       }
     };
 
     const onOpen = () => {
-      if (this.opts.debug) console.log("[r2] connected");
+      if (this.opts.debug) console.log("[r2 client] connected");
       this.emit("connected"); // payload: void
       this.startHeartbeat();
     };
 
     const onClose = (_ev: CloseEvent) => {
-      if (this.opts.debug) console.log("[r2] disconnected");
+      if (this.opts.debug) console.log("[r2 client] disconnected");
       this.emit("disconnected"); // payload: void
       this.stopHeartbeat();
       if (!this.closedByUser && this.opts.reconnect) {
@@ -66,7 +66,7 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
 
     const onError = (err: Event | Error) => {
       const errorObj = err instanceof Error ? err : new Error((err as Event)?.type ? `WebSocket error: ${(err as Event).type}` : "WebSocket error");
-      if (this.opts.debug) console.error("[r2] ws error", errorObj);
+      if (this.opts.debug) console.error("[r2 client] ws error", errorObj);
       this.emit("error", errorObj);
     };
 
@@ -76,7 +76,7 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
 
   private scheduleReconnect() {
     if (this.reconnectTimer) return;
-    if (this.opts.debug) console.log("[r2] scheduling reconnect");
+    if (this.opts.debug) console.log("[r2 client] scheduling reconnect");
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = undefined;
       if (this.closedByUser) return;
@@ -112,7 +112,7 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   // ---- Action Emitters ----
   emitAction<TPayload = unknown>(action: NotifyAction, payload?: TPayload) {
     const envelope = makeAction(action, payload);
-    if (this.opts.debug) console.log("[r2] ->", envelope);
+    if (this.opts.debug) console.log("[r2 client] ->", envelope);
     this.conn.send(envelope);
   }
 
@@ -123,11 +123,11 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   markAppAsRead(appId: string) {
     this.emitAction("markAppAsRead", { appId });
   }
-  markGroupAsRead(groupId: string) {
-    this.emitAction("markGroupAsRead", { groupId });
+  markGroupAsRead(appId: string, groupKey: string) {
+    this.emitAction("markGroupAsRead", { appId, groupKey });
   }
-  markNotificationAsRead(notificationId: string) {
-    this.emitAction("markNotificationAsRead", { notificationId });
+  markNotificationAsRead(id: string) {
+    this.emitAction("markNotificationAsRead", { id });
   }
 
   deleteNotifications() {
@@ -136,11 +136,11 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   deleteAppNotifications(appId: string) {
     this.emitAction("deleteAppNotifications", { appId });
   }
-  deleteGroupNotifications(groupId: string) {
-    this.emitAction("deleteGroupNotifications", { groupId });
+  deleteGroupNotifications(appId: string, groupKey: string) {
+    this.emitAction("deleteGroupNotifications", { appId, groupKey });
   }
-  deleteNotification(notificationId: string) {
-    this.emitAction("deleteNotification", { notificationId });
+  deleteNotification(id: string) {
+    this.emitAction("deleteNotification", { id });
   }
 
   reloadNotifications() {

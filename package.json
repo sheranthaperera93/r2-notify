@@ -7,7 +7,7 @@
     ],
     "scripts": {
         "build:packages": "cd packages/r2-notify-client && npm run build && cd ../r2-notify-react && npm run build && cd ../../",
-        "dev:sample-app": "cd apps/test-app && npm run dev"
+        "dev:sample-app": "cd apps/sample-react-test-app && npm run dev"
     },
     "devDependencies": {
         "@types/babel__core": "^7.20.5",

@@ -42,7 +42,7 @@ export class Connection {
      * If `onOpen` is provided, calls it with no arguments.
      */
     ws.onopen = () => {
-      if (this.debug) console.log("[r2] connected");
+      if (this.debug) console.log("[r2 client] connected");
       onOpen?.();
     };
     /**
@@ -56,7 +56,7 @@ export class Connection {
         const data = JSON.parse(ev.data as string);
         onMessage(data);
       } catch (e) {
-        if (this.debug) console.warn("[r2] invalid json", e);
+        if (this.debug) console.warn("[r2 client] invalid json", e);
       }
     };
     /**
@@ -66,7 +66,7 @@ export class Connection {
      * Calls the `onClose` callback with the close event.
      */
     ws.onclose = (ev) => {
-      if (this.debug) console.log("[r2] closed", ev.code, ev.reason);
+      if (this.debug) console.log("[r2 client] closed", ev.code, ev.reason);
       onClose(ev);
     };
     /**
@@ -75,7 +75,7 @@ export class Connection {
      * If `debug` is true, logs an error message to the console with the error object.
      */
     ws.onerror = (err) => {
-      if (this.debug) console.error("[r2] error", err);
+      if (this.debug) console.error("[r2 client] error", err);
       onError?.(err);
     };
   }

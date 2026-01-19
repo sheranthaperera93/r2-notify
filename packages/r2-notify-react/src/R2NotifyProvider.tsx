@@ -38,20 +38,20 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
 
     const onListNotifications = (payload: Notification[]) => {
       if (!isMounted) return;
-      if (opts.debug) console.debug("on list notifications", payload);
+      if (opts.debug) console.debug("[r2-react] on list notifications", payload);
       const list = Array.isArray(payload) ? payload : [];
       setState((s) => ({ ...s, listNotifications: payload as Notification[] }));
     };
     const onNewNotification = (payload: Notification) => {
       if (!isMounted) return;
-       if (opts.debug) console.debug("on new notification", payload);
+       if (opts.debug) console.debug("[r2-react] on new notification", payload);
       const n = payload as Notification;
       if (!n.id) return;
       setState((s) => ({ ...s, newNotification: payload as Notification }));
     };
     const onListConfigurations = (payload: NotificationConfig) => {
       if (!isMounted) return;
-      if (opts.debug) console.debug("on list configurations", payload);
+      if (opts.debug) console.debug("[r2-react] on list configurations", payload);
       setState((s) => ({ ...s, listConfigurations: payload as NotificationConfig }));
     };
 
@@ -97,13 +97,13 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
     return {
       markAsRead: () => client.markAsRead(),
       markAppAsRead: (appId: string) => client.markAppAsRead(appId),
-      markGroupAsRead: (groupId: string) => client.markGroupAsRead(groupId),
-      markNotificationAsRead: (notificationId: string) => client.markNotificationAsRead(notificationId),
+      markGroupAsRead: (appId: string, groupKey: string) => client.markGroupAsRead(appId, groupKey),
+      markNotificationAsRead: (id: string) => client.markNotificationAsRead(id),
 
       deleteNotifications: () => client.deleteNotifications(),
       deleteAppNotifications: (appId: string) => client.deleteAppNotifications(appId),
-      deleteGroupNotifications: (groupId: string) => client.deleteGroupNotifications(groupId),
-      deleteNotification: (notificationId: string) => client.deleteNotification(notificationId),
+      deleteGroupNotifications: (appId: string, groupKey: string) => client.deleteGroupNotifications(appId, groupKey),
+      deleteNotification: (id: string) => client.deleteNotification(id),
 
       reloadNotifications: () => client.reloadNotifications(),
       toggleNotificationStatus: (appId: string, enabled: boolean) =>

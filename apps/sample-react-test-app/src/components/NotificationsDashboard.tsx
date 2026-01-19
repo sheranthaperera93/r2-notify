@@ -184,7 +184,7 @@ const NotificationsDashboard: React.FC = () => {
       >
         <h2>📬 Notifications</h2>
         <button onClick={handleRefresh} style={{ flex: "0 0 auto" }}>
-          🔄 Refresh
+          Reload Notifications
         </button>
       </div>
 
@@ -214,7 +214,10 @@ const NotificationsDashboard: React.FC = () => {
                 </span>
                 <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
                   <button onClick={() => actions?.markAppAsRead?.(app.appId)}>
-                    Mark app as read
+                    Mark App as Read
+                  </button>
+                  <button onClick={() => actions?.deleteAppNotifications?.(app.appId)}>
+                    Delete App
                   </button>
                 </div>
               </div>
@@ -249,10 +252,18 @@ const NotificationsDashboard: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.preventDefault();
-                          actions?.markGroupAsRead?.(g.groupKey);
+                          actions?.markGroupAsRead?.(app.appId, g.groupKey);
                         }}
                       >
-                        Mark group read
+                        Mark Group as Read
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          actions?.deleteGroupNotifications?.(app.appId, g.groupKey);
+                        }}
+                      >
+                        Delete Group
                       </button>
                     </div>
                   </summary>
@@ -272,7 +283,6 @@ const NotificationsDashboard: React.FC = () => {
                         }}
                       >
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600 }}>{n.groupKey}</div>
                           {n.message && (
                             <div style={{ marginTop: 4 }}>{n.message}</div>
                           )}
@@ -294,7 +304,7 @@ const NotificationsDashboard: React.FC = () => {
                                 actions?.markNotificationAsRead?.(n.id)
                               }
                             >
-                              Mark read
+                              Mark as Read
                             </button>
                           )}
                           <button

@@ -9,8 +9,6 @@ const ConfigurationPanel: React.FC = () => {
   const { listConfigurations: configuration } = useNotifications();
   const [showDetails, setShowDetails] = useState(false);
 
-    console.log("Configurations", configuration);
-
   const configList = configuration ? (configuration as Configuration) : {};
   const configEntries = Object.entries(configList);
 

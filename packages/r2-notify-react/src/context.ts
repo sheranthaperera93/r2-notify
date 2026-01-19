@@ -9,13 +9,13 @@ export interface R2NotifyContextValue {
   actions: {
     markAsRead: () => void;
     markAppAsRead: (appId: string) => void;
-    markGroupAsRead: (groupId: string) => void;
-    markNotificationAsRead: (notificationId: string) => void;
+    markGroupAsRead: (appId: string, groupId: string) => void;
+    markNotificationAsRead: (id: string) => void;
 
     deleteNotifications: () => void;
     deleteAppNotifications: (appId: string) => void;
-    deleteGroupNotifications: (groupId: string) => void;
-    deleteNotification: (notificationId: string) => void;
+    deleteGroupNotifications: (appId: string, groupId: string) => void;
+    deleteNotification: (id: string) => void;
 
     reloadNotifications: () => void;
     toggleNotificationStatus: (appId: string, enabled: boolean) => void;
