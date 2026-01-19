@@ -6,6 +6,14 @@ export function parseTime(s?: string) {
   return Number.isFinite(t) ? t : 0;
 }
 
+export function formatDate(dateString?: string) {
+  if (!dateString) return "N/A";
+  try {
+    return new Date(dateString).toLocaleString();
+  } catch {
+    return dateString ?? "";
+  }
+};
 
 export function groupNotifications(all: NotificationMessage[]): AppUI[] {
   const apps = new Map<
@@ -66,7 +74,7 @@ export function groupNotifications(all: NotificationMessage[]): AppUI[] {
 }
 
 /** Dedup + newest-first sort for your flat source of truth */
-export function dedupAndSort(
+export function deDuplicateAndSort(
   merged: NotificationMessage[]
 ): NotificationMessage[] {
   const byId = new Map<string, NotificationMessage>();

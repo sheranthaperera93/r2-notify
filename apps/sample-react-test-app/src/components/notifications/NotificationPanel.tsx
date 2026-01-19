@@ -8,48 +8,40 @@ import {
   Typography,
 } from "@mui/material";
 import { Notifications } from "@mui/icons-material";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNotifications, useNotifyActions } from "r2-notify-react";
 import { AppUI, NotificationMessage } from "./types";
-import { dedupAndSort, groupNotifications } from "./utils";
+import { deDuplicateAndSort, groupNotifications } from "./utils";
 import AppAccordion from "./AppAccordion";
 
 export default function NotificationPanel() {
+  const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
   const { listNotifications, newNotification } = useNotifications();
   const actions = useNotifyActions();
 
-  // Incremental accumulation (as you had)
-  const [incr, setIncr] = useState<NotificationMessage[]>([]);
-  const seen = useRef<Set<string>>(new Set());
-
   useEffect(() => {
-    console.log("Called listNotifications", listNotifications);
     const base = Array.isArray(listNotifications) ? listNotifications : [];
-    const nextSeen = new Set<string>();
-    for (const n of base) nextSeen.add(n.id);
-    seen.current = nextSeen;
-    setIncr((curr) => curr.filter((n) => !nextSeen.has(n.id)));
+    setNotifications(base);
   }, [listNotifications]);
 
   useEffect(() => {
-    console.log("Called new notification", newNotification);
     if (!newNotification) return;
     const n = newNotification as NotificationMessage;
-    if (!n.id || seen.current.has(n.id)) return;
-    seen.current.add(n.id);
-    setIncr((curr) => [n, ...curr]);
+    setNotifications((curr) => [n, ...curr]);
   }, [newNotification]);
 
-  const all = useMemo(() => {
+  const allNotifications = useMemo(() => {
     const base = Array.isArray(listNotifications) ? listNotifications : [];
-    return dedupAndSort([...incr, ...base]);
-  }, [listNotifications, incr]);
+    return deDuplicateAndSort([...notifications, ...base]);
+  }, [listNotifications, notifications]);
 
-  const grouped = useMemo<AppUI[]>(() => groupNotifications(all), [all]);
+  const grouped = useMemo<AppUI[]>(
+    () => groupNotifications(allNotifications),
+    [allNotifications],
+  );
 
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const open = Boolean(anchorEl);
-  const id = open ? "notifications-popup" : undefined;
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -58,24 +50,32 @@ export default function NotificationPanel() {
 
   const handleRefresh = () => actions?.reloadNotifications?.();
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch {
-      return dateString ?? "";
-    }
-  };
-
-  // Action handlers
+  /**
+   * Handles the event to mark all notifications for a specific app as read.
+   * @param {React.MouseEvent} e - The event object.
+   * @param {string} appId - The ID of the app to mark as read.
+   */
   const handleAppMarkAsRead = (e: React.MouseEvent, appId: string) => {
     e.stopPropagation();
     actions?.markAppAsRead?.(appId);
   };
+
+  /**
+   * Handles the event to delete all notifications for a specific app.
+   * @param {React.MouseEvent} e - The event object.
+   * @param {string} appId - The ID of the app to delete notifications for.
+   */
   const handleAppDelete = (e: React.MouseEvent, appId: string) => {
     e.stopPropagation();
     actions?.deleteAppNotifications?.(appId);
   };
+
+  /**
+   * Handles the event to mark all notifications for a specific app and group key as read.
+   * @param {React.MouseEvent} e - The event object.
+   * @param {string} appId - The ID of the app to mark as read.
+   * @param {string} groupKey - The key of the group to mark as read.
+   */
   const handleGroupMarkAsRead = (
     e: React.MouseEvent,
     appId: string,
@@ -84,6 +84,13 @@ export default function NotificationPanel() {
     e.stopPropagation();
     actions?.markGroupAsRead?.(appId, groupKey);
   };
+
+  /**
+   * Handles the event to delete all notifications for a specific app and group key.
+   * @param {React.MouseEvent} e - The event object.
+   * @param {string} appId - The ID of the app to delete notifications for.
+   * @param {string} groupKey - The key of the group to delete notifications for.
+   */
   const handleGroupDelete = (
     e: React.MouseEvent,
     appId: string,
@@ -92,33 +99,43 @@ export default function NotificationPanel() {
     e.stopPropagation();
     actions?.deleteGroupNotifications?.(appId, groupKey);
   };
+  /**
+   * Handles the event to mark a notification as read.
+   * @param {React.MouseEvent} e - The event object.
+   * @param {string} id - The ID of the notification to mark as read.
+   */
   const handleMarkNotificationAsRead = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     actions?.markNotificationAsRead?.(id);
   };
+
+  /**
+   * Handles the event to delete a specific notification.
+   * @param {React.MouseEvent} e - The event object.
+   * @param {string} id - The ID of the notification to delete.
+   */
   const handleNotificationDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     actions?.deleteNotification?.(id);
   };
-  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   return (
     <>
       <IconButton
         size="large"
-        aria-describedby={id}
+        aria-describedby={open ? "notifications-popup" : undefined}
         onClick={handleClick}
         edge="end"
         color="inherit"
         aria-label="Notifications"
       >
-        <Badge badgeContent={all.length} color="error">
+        <Badge badgeContent={notifications.length} color="error">
           <Notifications />
         </Badge>
       </IconButton>
 
       <Popover
-        id={id}
+        id={open ? "notifications-popup" : undefined}
         open={open}
         anchorEl={anchorEl}
         onClose={handleClose}
@@ -137,7 +154,9 @@ export default function NotificationPanel() {
               borderColor: "divider",
             }}
           >
-            <Typography variant="body1">Total: {all.length}</Typography>
+            <Typography variant="body1">
+              Total: {notifications.length}
+            </Typography>
             <Button
               size="small"
               variant="outlined"
@@ -168,8 +187,6 @@ export default function NotificationPanel() {
                 <AppAccordion
                   key={`notification-app-${app.appId}`}
                   app={app}
-                  formatDate={formatDate}
-                  stop={stop}
                   onAppMarkRead={handleAppMarkAsRead}
                   onAppDelete={handleAppDelete}
                   onGroupMarkRead={handleGroupMarkAsRead}
@@ -185,4 +202,3 @@ export default function NotificationPanel() {
     </>
   );
 }
-``;

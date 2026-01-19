@@ -1,29 +1,47 @@
 // components/notifications/NotificationItem.tsx
-import { Check, DeleteOutline } from "@mui/icons-material";
-import { Box, IconButton, Typography } from "@mui/material";
+import { Check, DeleteOutline, MoreVertOutlined } from "@mui/icons-material";
+import {
+  Box,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  MenuList,
+  Popover,
+  Typography,
+} from "@mui/material";
 import NotificationStatusBorder from "./NotificationStatusBorder";
 import { NotificationMessage } from "./types";
+import { formatDate } from "./utils";
+import { useState } from "react";
 
 type Props = {
   item: NotificationMessage;
-  formatDate: (s?: string) => string;
   onMarkRead: (e: React.MouseEvent, id: string) => void;
   onDelete: (e: React.MouseEvent, id: string) => void;
-  stop: (e: React.SyntheticEvent) => void;
 };
 
 export default function NotificationItem({
   item,
-  formatDate,
   onMarkRead,
   onDelete,
-  stop,
 }: Props) {
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
   return (
-    <NotificationStatusBorder status={item.status} sx={{ mb: 0.5 }}>
+    <NotificationStatusBorder status={item.status} sx={{ mb: 0.5, ml: 3 }}>
       <Box
-        onClick={stop}
-        onFocus={stop}
+        onClick={(e) => e.stopPropagation()}
+        onFocus={(e) => e.stopPropagation()}
         sx={{ display: "flex", alignItems: "center", py: 0.5 }}
       >
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -42,20 +60,49 @@ export default function NotificationItem({
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, ml: 2 }}>
           <IconButton
-            size="small"
-            title="Mark as Read"
-            onClick={(e) => onMarkRead(e, item.id)}
+            aria-describedby="App-More"
+            onClick={handleClick}
+            component="span"
           >
-            <Check fontSize="small" />
+            <MoreVertOutlined fontSize="small" />
           </IconButton>
-          <IconButton
-            size="small"
-            title="Delete"
-            color="error"
-            onClick={(e) => onDelete(e, item.id)}
+          <Popover
+            id={`group-more-${item.id}`}
+            open={open}
+            anchorEl={anchorEl}
+            onClose={handleClose}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "left",
+            }}
           >
-            <DeleteOutline fontSize="small" />
-          </IconButton>
+            <Box>
+              <MenuList disablePadding>
+                <MenuItem
+                  onClick={(e) => {
+                    onMarkRead(e, item.id);
+                    handleClose();
+                  }}
+                >
+                  <ListItemIcon title="Mark group as Read">
+                    <Check fontSize="small" color="success" />
+                  </ListItemIcon>
+                  <ListItemText>Mark as Read</ListItemText>
+                </MenuItem>
+                <MenuItem
+                  onClick={(e) => {
+                    onDelete(e, item.id);
+                    handleClose();
+                  }}
+                >
+                  <ListItemIcon title="Delete App" color="error">
+                    <DeleteOutline fontSize="small" color="error" />
+                  </ListItemIcon>
+                  <ListItemText>Delete</ListItemText>
+                </MenuItem>
+              </MenuList>
+            </Box>
+          </Popover>
         </Box>
       </Box>
     </NotificationStatusBorder>

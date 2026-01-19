@@ -3,7 +3,6 @@ import { R2NotifyProvider, useNotifications } from "r2-notify-react";
 import ConfigurationPanel from "./components/ConfigurationPanel";
 import "./App.css";
 import ConnectionForm from "./components/ConnectionForm";
-import { Container, Nav, Navbar } from "react-bootstrap";
 import { AppBar, Box, Toolbar, Typography } from "@mui/material";
 import NotificationPanel from "./components/notifications/NotificationPanel";
 

@@ -1,22 +1,26 @@
 // components/notifications/GroupAccordion.tsx
-import { Check, DeleteOutline } from "@mui/icons-material";
+import { Check, DeleteOutline, MoreVertOutlined } from "@mui/icons-material";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
   IconButton,
+  ListItemIcon,
+  ListItemText,
+  MenuItem,
+  MenuList,
+  Popover,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import NotificationItem from "./NotificationItem";
 import { GroupUI, NotificationMessage } from "./types";
+import { useState } from "react";
 
 type Props = {
   appId: string;
   group: GroupUI;
-  formatDate: (s?: string) => string;
-  stop: (e: React.SyntheticEvent) => void;
   onMarkRead: (e: React.MouseEvent, appId: string, groupKey: string) => void;
   onDelete: (e: React.MouseEvent, appId: string, groupKey: string) => void;
   onItemRead: (e: React.MouseEvent, id: string) => void;
@@ -26,18 +30,28 @@ type Props = {
 export default function GroupAccordion({
   appId,
   group,
-  formatDate,
-  stop,
   onMarkRead,
   onDelete,
   onItemRead,
   onItemDelete,
 }: Props) {
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+
   return (
     <Accordion
       disableGutters
       elevation={0}
-      square
+      defaultExpanded
       sx={{
         "&:before": { display: "none" },
         "&.Mui-expanded": { margin: 0 },
@@ -48,47 +62,76 @@ export default function GroupAccordion({
         id={`group-header-${group.groupKey}`}
         sx={{
           flexDirection: "row-reverse",
-          "& .MuiAccordionSummary-content": { ml: 1 },
-          pl: 0,
+          pl: 2,
           pr: 0,
         }}
       >
-        <Typography component="span" noWrap sx={{ flex: 1, minWidth: 0 }}>
-          {group.groupKey}
-        </Typography>
-
-        {/* Group actions */}
-        <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-          <IconButton
-            size="small"
-            component="span"
-            title="Mark Group as Read"
-            onClick={(e) => onMarkRead(e, appId, group.groupKey)}
+        <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+          <Typography noWrap sx={{ ml: 1 }}>
+            {group.groupKey}
+          </Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          {/* Group actions */}
+          <Box
+            onClick={(e) => e.stopPropagation()}
+            onFocus={(e) => e.stopPropagation()}
           >
-            <Check fontSize="small" />
-          </IconButton>
-          <IconButton
-            size="small"
-            component="span"
-            title="Delete Group"
-            color="error"
-            onClick={(e) => onDelete(e, appId, group.groupKey)}
-          >
-            <DeleteOutline fontSize="small" />
-          </IconButton>
+            <IconButton
+              aria-describedby="App-More"
+              onClick={handleClick}
+              component="span"
+            >
+              <MoreVertOutlined fontSize="small" />
+            </IconButton>
+            <Popover
+              id={`group-more-${group.groupKey}`}
+              open={open}
+              anchorEl={anchorEl}
+              onClose={handleClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+            >
+              <Box>
+                <MenuList disablePadding>
+                  <MenuItem
+                    onClick={(e) => {
+                      onMarkRead(e, appId, group.groupKey);
+                      handleClose();
+                    }}
+                  >
+                    <ListItemIcon title="Mark group as Read">
+                      <Check fontSize="small" color="success" />
+                    </ListItemIcon>
+                    <ListItemText>Mark Group as Read</ListItemText>
+                  </MenuItem>
+                  <MenuItem
+                    onClick={(e) => {
+                      onDelete(e, appId, group.groupKey);
+                      handleClose();
+                    }}
+                  >
+                    <ListItemIcon title="Delete App" color="error">
+                      <DeleteOutline fontSize="small" color="error" />
+                    </ListItemIcon>
+                    <ListItemText>Delete Group</ListItemText>
+                  </MenuItem>
+                </MenuList>
+              </Box>
+            </Popover>
+          </Box>
         </Box>
       </AccordionSummary>
 
-      <AccordionDetails sx={{ pt: 0, pr: 0, pl: 0 }}>
+      <AccordionDetails style={{ padding: 0 }}>
         {/* Items */}
         {group.items.map((item: NotificationMessage) => (
           <NotificationItem
             key={item.id}
             item={item}
-            formatDate={formatDate}
             onMarkRead={onItemRead}
             onDelete={onItemDelete}
-            stop={stop}
           />
         ))}
       </AccordionDetails>
