@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { R2NotifyProvider, useNotifications } from "r2-notify-react";
-import NotificationsDashboard from "./components/NotificationsDashboard";
 import ConfigurationPanel from "./components/ConfigurationPanel";
 import "./App.css";
 import ConnectionForm from "./components/ConnectionForm";
+import { Container, Nav, Navbar } from "react-bootstrap";
+import { AppBar, Box, Toolbar, Typography } from "@mui/material";
+import NotificationPanel from "./components/notifications/NotificationPanel";
 
 interface AppContentProps {
   wsUrl: string;
@@ -22,35 +24,53 @@ const AppContent: React.FC<AppContentProps> = ({
 
   return (
     <div className="container">
-      <div className="header">
-        <h1>🔔 R2 Notify Test App</h1>
-        <p>Test the r2-notify-react notification system</p>
-      </div>
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="static" color="success">
+          <Toolbar>
+            <Typography variant="h4" sx={{ flexGrow: 1 }}>
+              R2 Notify Test App
+            </Typography>
+            <NotificationPanel />
+          </Toolbar>
+        </AppBar>
+      </Box>
+      <Typography
+        variant="h5"
+        marginTop="10px"
+        marginLeft="20px"
+        marginRight="20px"
+      >
+        Test the r2-notify-react notification system
+      </Typography>
 
       {lastError && (
-        <div className="error-message">
+        <Typography variant="h5" className="error-message" marginTop="15px">
           <strong>Error:</strong> {lastError ? lastError.message : "Unknown"}
-        </div>
+        </Typography>
       )}
 
-      <div className="main-grid">
-        {/* Connection Form */}
-        <ConnectionForm
-          clientId={clientId}
-          isConnected={isConnected}
-          setClientId={setClientId}
-          setWsUrl={setWsUrl}
-          wsUrl={wsUrl}
-        />
+      <Box
+        sx={{
+          flexGrow: 1,
+          marginTop: "16px",
+          marginLeft: "20px",
+          marginRight: "20px",
+        }}
+      >
+        <div className="main-grid">
+          {/* Connection Form */}
+          <ConnectionForm
+            clientId={clientId}
+            isConnected={isConnected}
+            setClientId={setClientId}
+            setWsUrl={setWsUrl}
+            wsUrl={wsUrl}
+          />
 
-        {/* Configuration Panel */}
-        <ConfigurationPanel />
-      </div>
-
-      <div className="card full-width">
-        {/* Notifications Dashboard */}
-        <NotificationsDashboard />
-      </div>
+          {/* Configuration Panel */}
+          <ConfigurationPanel />
+        </div>
+      </Box>
     </div>
   );
 };

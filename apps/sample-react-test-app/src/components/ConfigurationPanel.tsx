@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNotifications } from "r2-notify-react";
+import { Button, Card, Typography } from "@mui/material";
 
 interface Configuration {
   [key: string]: any;
@@ -13,8 +14,8 @@ const ConfigurationPanel: React.FC = () => {
   const configEntries = Object.entries(configList);
 
   return (
-    <div className="card">
-      <h2>⚙️ Configuration</h2>
+    <Card className="card">
+      <Typography variant="h6">⚙️ Configuration</Typography>
 
       {configEntries.length === 0 ? (
         <div className="empty-state" style={{ padding: "16px" }}>
@@ -76,15 +77,12 @@ const ConfigurationPanel: React.FC = () => {
             )}
           </div>
 
-          <button
+          <Button
+            variant="outlined"
             onClick={() => setShowDetails(!showDetails)}
-            style={{
-              background: showDetails ? "#764ba2" : "#667eea",
-              marginBottom: "12px",
-            }}
           >
             {showDetails ? "Hide Details" : "Show Raw Data"}
-          </button>
+          </Button>
 
           {showDetails && (
             <pre
@@ -96,6 +94,7 @@ const ConfigurationPanel: React.FC = () => {
                 maxHeight: "300px",
                 fontSize: "0.8em",
                 border: "1px solid #e5e7eb",
+                marginTop: "16px",
               }}
             >
               {JSON.stringify(configList, null, 2)}
@@ -103,7 +102,7 @@ const ConfigurationPanel: React.FC = () => {
           )}
         </>
       )}
-    </div>
+    </Card>
   );
 };
 
