@@ -1,4 +1,4 @@
-import { AppUI, GroupUI, NotificationMessage } from "./types";
+import { NotificationApp, NotificationGroup, NotificationMessage } from "r2-notify-client";
 
 export function parseTime(s?: string) {
   if (!s) return 0;
@@ -15,10 +15,10 @@ export function formatDate(dateString?: string) {
   }
 };
 
-export function groupNotifications(all: NotificationMessage[]): AppUI[] {
+export function groupNotifications(all: NotificationMessage[]): NotificationApp[] {
   const apps = new Map<
     string,
-    { latest: number; unread: number; total: number; groups: Map<string, GroupUI> }
+    { latest: number; unread: number; total: number; groups: Map<string, NotificationGroup> }
   >();
 
   for (const n of all) {
@@ -27,7 +27,7 @@ export function groupNotifications(all: NotificationMessage[]): AppUI[] {
       latest: 0,
       unread: 0,
       total: 0,
-      groups: new Map<string, GroupUI>(),
+      groups: new Map<string, NotificationGroup>(),
     };
 
     const grp = app.groups.get(n.groupKey) ?? {
@@ -49,7 +49,7 @@ export function groupNotifications(all: NotificationMessage[]): AppUI[] {
     apps.set(n.appId, app);
   }
 
-  const appArr: AppUI[] = Array.from(apps, ([appId, data]) => {
+  const appArr: NotificationApp[] = Array.from(apps, ([appId, data]) => {
     const groups = Array.from(data.groups.values()).map((g) => {
       g.items.sort((a, b) => {
         const ta = Math.max(parseTime(a.createdAt), parseTime(a.updatedAt));

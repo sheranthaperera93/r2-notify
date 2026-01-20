@@ -29,7 +29,13 @@ export function useNotifyEvent<TPayload = unknown>(
 }
 
 /**
- * Convenience hook to access cached slices and actions.
+ * Convenience hook to access the cached state of the client.
+ * The properties are:
+ * - isConnected: boolean indicating the connection state
+ * - listNotifications: array of NotificationMessage objects (can be empty)
+ * - newNotification: The latest NotificationMessage object (can be undefined)
+ * - listConfigurations: array of NotificationConfig objects (can be empty)
+ * - lastError: Error object if a connection error occurred (can be undefined)
  */
 export function useNotifications() {
   const { state } = useR2Notify();
@@ -42,6 +48,21 @@ export function useNotifications() {
   };
 }
 
+/**
+ * Convenience hook to access the actions of the client.
+ * These actions are memoized by React, so you can safely use them in your components.
+ * The actions are:
+ * - markAsRead(): Mark all notifications as read
+ * - markAppAsRead(appId: string): Mark all notifications of an app as read
+ * - markGroupAsRead(appId: string, groupKey: string): Mark all notifications of a group as read
+ * - markNotificationAsRead(id: string): Mark a notification as read
+ * - deleteNotifications(): Delete all notifications
+ * - deleteAppNotifications(appId: string): Delete all notifications of an app
+ * - deleteGroupNotifications(appId: string, groupKey: string): Delete all notifications of a group
+ * - deleteNotification(id: string): Delete a notification
+ * - reloadNotifications(): Reload the notifications
+ * - toggleNotificationStatus(appId: string, enabled: boolean): Toggle the notification status of an app
+ */
 export function useNotifyActions() {
   const { actions } = useR2Notify();
   return actions;

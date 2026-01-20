@@ -15,12 +15,12 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import NotificationItem from "./NotificationItem";
-import { GroupUI, NotificationMessage } from "./types";
 import { useState } from "react";
+import { NotificationGroup, NotificationMessage } from "r2-notify-client";
 
 type Props = {
   appId: string;
-  group: GroupUI;
+  group: NotificationGroup;
   onMarkRead: (e: React.MouseEvent, appId: string, groupKey: string) => void;
   onDelete: (e: React.MouseEvent, appId: string, groupKey: string) => void;
   onItemRead: (e: React.MouseEvent, id: string) => void;

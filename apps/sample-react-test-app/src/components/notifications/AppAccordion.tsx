@@ -15,11 +15,11 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupAccordion from "./GroupAccordion";
-import { AppUI } from "./types";
 import { useState } from "react";
+import { NotificationApp } from "r2-notify-client";
 
 type Props = {
-  app: AppUI;
+  app: NotificationApp;
   onAppMarkRead: (e: React.MouseEvent, appId: string) => void;
   onAppDelete: (e: React.MouseEvent, appId: string) => void;
   onGroupMarkRead: (

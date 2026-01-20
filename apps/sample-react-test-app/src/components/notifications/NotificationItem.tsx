@@ -11,9 +11,9 @@ import {
   Typography,
 } from "@mui/material";
 import NotificationStatusBorder from "./NotificationStatusBorder";
-import { NotificationMessage } from "./types";
 import { formatDate } from "./utils";
 import { useState } from "react";
+import { NotificationMessage } from "r2-notify-client";
 
 type Props = {
   item: NotificationMessage;

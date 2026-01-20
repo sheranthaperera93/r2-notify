@@ -10,7 +10,7 @@ import {
 import { Notifications } from "@mui/icons-material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNotifications, useNotifyActions } from "r2-notify-react";
-import { AppUI, NotificationMessage } from "./types";
+import { NotificationApp, NotificationMessage } from "r2-notify-client";
 import { deDuplicateAndSort, groupNotifications } from "./utils";
 import AppAccordion from "./AppAccordion";
 
@@ -35,7 +35,7 @@ export default function NotificationPanel() {
     return deDuplicateAndSort([...notifications, ...base]);
   }, [listNotifications, notifications]);
 
-  const grouped = useMemo<AppUI[]>(
+  const grouped = useMemo<NotificationApp[]>(
     () => groupNotifications(allNotifications),
     [allNotifications],
   );

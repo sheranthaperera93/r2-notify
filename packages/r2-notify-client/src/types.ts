@@ -1,7 +1,4 @@
-export type NotifyEvent =
-  | "listNotifications" // full list
-  | "newNotification" // incremental updates
-  | "listConfigurations"; // config/meta
+export type NotifyEvent = "listNotifications" | "newNotification" | "listConfigurations";
 
 export type ClientLifecycleEvent = "connected" | "disconnected" | "error";
 
@@ -33,11 +30,44 @@ export interface ServerEventEnvelope<TEvent = NotifyEvent, TPayload = unknown> {
 }
 
 export interface R2NotifyClientOptions {
-  url: string; // wss://...
-  clientId: string; // unique client identifier
-  token?: string; // JWT or API key for auth (optional)
+  url: string;
+  clientId: string;
+  token?: string;
   reconnect?: boolean;
   reconnectDelayMs?: number;
   heartbeatMs?: number;
   debug?: boolean;
 }
+
+// Notification types and interfaces
+export interface NotificationMessage {
+  id: string;
+  appId: string;
+  userId: string;
+  groupKey: string;
+  message: string;
+  status: "success" | "error" | "warning" | "info";
+  readStatus: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationGroup {
+  groupKey: string;
+  latest: number;
+  unread: number;
+  items: NotificationMessage[];
+}
+export interface NotificationApp {
+  appId: string;
+  latest: number;
+  unread: number;
+  groups: NotificationGroup[];
+  total: number;
+}
+
+export type NotificationConfig = {
+  id: string;
+  userId: string;
+  enableNotification: boolean;
+};
