@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { R2NotifyProvider, useNotifications } from "r2-notify-react";
-import ConfigurationPanel from "./components/notifications/ConfigurationPanel";
 import "./App.css";
 import ConnectionForm from "./components/ConnectionForm";
 import { AppBar, Box, Toolbar, Typography } from "@mui/material";

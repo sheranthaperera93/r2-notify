@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNotifications, useNotifyActions } from "r2-notify-react";
-import {
-  Box,
-  Card,
-  FormLabel,
-  Switch,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, FormLabel, Switch, TextField, Typography } from "@mui/material";
 
 interface Configuration {
   [key: string]: any;
