@@ -7,17 +7,24 @@ import {
   Popover,
   Typography,
 } from "@mui/material";
-import { Notifications } from "@mui/icons-material";
+import {
+  Notifications,
+  NotificationsOffOutlined,
+  NotificationsOutlined,
+} from "@mui/icons-material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNotifications, useNotifyActions } from "r2-notify-react";
 import { NotificationApp, NotificationMessage } from "r2-notify-client";
 import { deDuplicateAndSort, groupNotifications } from "./utils";
 import AppAccordion from "./AppAccordion";
+import ConfigurationPanel from "../ConfigurationPanel";
 
 export default function NotificationPanel() {
   const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
-  const { listNotifications, newNotification } = useNotifications();
+  const { listNotifications, newNotification, isConnected } =
+    useNotifications();
   const actions = useNotifyActions();
+  const [visibleSettings, setVisibleSettings] = useState(false);
 
   useEffect(() => {
     const base = Array.isArray(listNotifications) ? listNotifications : [];
@@ -47,7 +54,6 @@ export default function NotificationPanel() {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => setAnchorEl(null);
-
   const handleRefresh = () => actions?.reloadNotifications?.();
 
   /**
@@ -119,6 +125,10 @@ export default function NotificationPanel() {
     actions?.deleteNotification?.(id);
   };
 
+  const handleSettingsClick = () => {
+    setVisibleSettings((prev) => !prev);
+  };
+
   return (
     <>
       <IconButton
@@ -143,60 +153,110 @@ export default function NotificationPanel() {
         slotProps={{ paper: { sx: { maxWidth: 500, minWidth: 400 } } }}
       >
         <Box sx={{ flex: 1 }}>
-          {/* Header bar */}
-          <Box
-            sx={{
-              p: 1,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderBottom: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            <Typography variant="body1">
-              Total: {notifications.length}
-            </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              color="inherit"
-              title="Reload Notifications"
-              onClick={handleRefresh}
-            >
-              Reload
-            </Button>
-          </Box>
-
-          {/* Content */}
-          <Box sx={{ p: 1 }}>
-            {grouped.length === 0 ? (
-              <Box textAlign="center" color="#999" pb={4}>
-                <Box fontSize="3em" mb={2}>
-                  📭
+          {!isConnected && (
+            <>
+              <Box
+                sx={{
+                  p: 1,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Box textAlign="center" color="#999" pb={4}>
+                  <Box mt={2} mb={2}>
+                    <NotificationsOffOutlined fontSize="large" />
+                  </Box>
+                  <Typography variant="subtitle1">
+                    System Unreachable
+                  </Typography>
+                  <Typography
+                    variant="subtitle2"
+                    color="#b1a9a9"
+                    sx={{ mt: 1 }}
+                  >
+                    Notification server unreachable
+                  </Typography>
                 </Box>
-                <Typography variant="subtitle1">
-                  No notifications yet
-                </Typography>
-                <Typography variant="caption" color="#b1a9a9" sx={{ mt: 1 }}>
-                  Notifications will appear here when received
-                </Typography>
               </Box>
-            ) : (
-              grouped.map((app) => (
-                <AppAccordion
-                  key={`notification-app-${app.appId}`}
-                  app={app}
-                  onAppMarkRead={handleAppMarkAsRead}
-                  onAppDelete={handleAppDelete}
-                  onGroupMarkRead={handleGroupMarkAsRead}
-                  onGroupDelete={handleGroupDelete}
-                  onItemRead={handleMarkNotificationAsRead}
-                  onItemDelete={handleNotificationDelete}
-                />
-              ))
-            )}
-          </Box>
+            </>
+          )}
+
+          {isConnected && (
+            <>
+              {/* Header bar */}
+              <Box
+                sx={{
+                  p: 1,
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  title="Reload Notifications"
+                  onClick={handleRefresh}
+                >
+                  Reload
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  title="Reload Notifications"
+                  onClick={handleSettingsClick}
+                  sx={{
+                    ml: 1,
+                  }}
+                >
+                  Settings
+                </Button>
+              </Box>
+
+              {visibleSettings && <ConfigurationPanel />}
+
+              {/* Content */}
+              {!visibleSettings && (
+                <Box sx={{ p: 1 }}>
+                  {grouped.length === 0 ? (
+                    <Box textAlign="center" color="#999" pb={4}>
+                      <Box mt={2} mb={2}>
+                        <NotificationsOutlined fontSize="large" />
+                      </Box>
+                      <Typography variant="subtitle1">
+                        No notifications yet
+                      </Typography>
+                      <Typography
+                        variant="subtitle2"
+                        color="#b1a9a9"
+                        sx={{ mt: 1 }}
+                      >
+                        Notifications will appear here when received
+                      </Typography>
+                    </Box>
+                  ) : (
+                    grouped.map((app) => (
+                      <AppAccordion
+                        key={`notification-app-${app.appId}`}
+                        app={app}
+                        onAppMarkRead={handleAppMarkAsRead}
+                        onAppDelete={handleAppDelete}
+                        onGroupMarkRead={handleGroupMarkAsRead}
+                        onGroupDelete={handleGroupDelete}
+                        onItemRead={handleMarkNotificationAsRead}
+                        onItemDelete={handleNotificationDelete}
+                      />
+                    ))
+                  )}
+                </Box>
+              )}
+            </>
+          )}
         </Box>
       </Popover>
     </>

@@ -41,7 +41,7 @@ export default function App() {
 
 - <R2NotifyProvider {...clientOptions} autoConnect? />
 - useNotifications() → { isConnected, notificationList, newNotificationList, configuration, lastError }
-- useNotifyActions() → { markAsRead, markAppAsRead, markGroupAsRead, markNotificationAsRead, deleteNotifications, deleteAppNotifications, deleteGroupNotifications, deleteNotification, reloadNotifications, toggleNotificationStatus }
+- useNotifyActions() → { markAsRead, markAppAsRead, markGroupAsRead, markNotificationAsRead, deleteNotifications, deleteAppNotifications, deleteGroupNotifications, deleteNotification, reloadNotifications, setNotificationStatus }
 - useR2Notify() → raw { client, state, actions }
 - useNotifyEvent(event, handler) → subscribe to any server event
 

@@ -17,7 +17,7 @@ export type NotifyAction =
   | "deleteNotification"
   // Other
   | "reloadNotifications"
-  | "toggleNotificationStatus";
+  | "setNotificationStatus";
 
 export interface ActionEnvelope<TPayload = unknown> {
   event: NotifyAction;

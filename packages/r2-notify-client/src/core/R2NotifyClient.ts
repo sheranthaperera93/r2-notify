@@ -146,7 +146,7 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   reloadNotifications() {
     this.emitAction("reloadNotifications");
   }
-  toggleNotificationStatus(appId: string, enabled: boolean) {
-    this.emitAction("toggleNotificationStatus", { appId, enabled });
+  setNotificationStatus(enableNotification: boolean) {
+    this.emitAction("setNotificationStatus", { enableNotification });
   }
 }

@@ -148,8 +148,8 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
       deleteNotification: (id: string) => client.deleteNotification(id),
 
       reloadNotifications: () => client.reloadNotifications(),
-      toggleNotificationStatus: (appId: string, enabled: boolean) =>
-        client.toggleNotificationStatus(appId, enabled),
+      setNotificationStatus: (enableNotification: boolean) =>
+        client.setNotificationStatus(enableNotification),
     };
   }, []);
 

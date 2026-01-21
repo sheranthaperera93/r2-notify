@@ -1,4 +1,5 @@
 import { Card, TextField, Typography } from "@mui/material";
+import { useNotifications } from "r2-notify-react";
 import { CardTitle, Row } from "react-bootstrap";
 
 export default function ConnectionForm({
@@ -6,14 +7,13 @@ export default function ConnectionForm({
   setWsUrl,
   clientId,
   setClientId,
-  isConnected,
 }: {
   wsUrl: string;
   setWsUrl: (url: string) => void;
   clientId: string;
   setClientId: (clientId: string) => void;
-  isConnected: boolean;
 }) {
+  const { isConnected } = useNotifications();
   return (
     <Card className="card">
       <CardTitle>

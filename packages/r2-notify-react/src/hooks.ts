@@ -61,7 +61,7 @@ export function useNotifications() {
  * - deleteGroupNotifications(appId: string, groupKey: string): Delete all notifications of a group
  * - deleteNotification(id: string): Delete a notification
  * - reloadNotifications(): Reload the notifications
- * - toggleNotificationStatus(appId: string, enabled: boolean): Toggle the notification status of an app
+ * - setNotificationStatus(enableNotification: boolean): Set the notification status of the client
  */
 export function useNotifyActions() {
   const { actions } = useR2Notify();

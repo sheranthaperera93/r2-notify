@@ -19,7 +19,7 @@ const AppContent: React.FC<AppContentProps> = ({
   clientId,
   setClientId,
 }) => {
-  const { isConnected, lastError } = useNotifications();
+  const { lastError } = useNotifications();
 
   return (
     <div className="container">
@@ -60,7 +60,6 @@ const AppContent: React.FC<AppContentProps> = ({
           {/* Connection Form */}
           <ConnectionForm
             clientId={clientId}
-            isConnected={isConnected}
             setClientId={setClientId}
             setWsUrl={setWsUrl}
             wsUrl={wsUrl}

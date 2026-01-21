@@ -18,7 +18,7 @@ export interface R2NotifyContextValue {
     deleteNotification: (id: string) => void;
 
     reloadNotifications: () => void;
-    toggleNotificationStatus: (appId: string, enabled: boolean) => void;
+    setNotificationStatus: (enableNotification: boolean) => void;
   };
 }
 
