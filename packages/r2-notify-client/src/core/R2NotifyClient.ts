@@ -1,13 +1,12 @@
 import EventEmitter from "eventemitter3";
 import { Connection } from "./connection";
 import { makeAction, isServerEventEnvelope, type EventHandlers } from "./protocol";
-import type { R2NotifyClientOptions, NotifyAction, NotifyEvent, R2NotifyClientEvent, ServerEventEnvelope } from "../types";
+import type { R2NotifyClientOptions, NotifyAction, NotifyEvent, R2NotifyClientEvent } from "../types";
 
 export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   private conn: Connection;
-  private opts: Required<Pick<R2NotifyClientOptions, "reconnect" | "reconnectDelayMs" | "heartbeatMs" | "debug">> &
-    Omit<R2NotifyClientOptions, "reconnect" | "reconnectDelayMs" | "heartbeatMs" | "debug"> & { clientId: string };
-  private heartbeatTimer?: number;
+  private opts: Required<Pick<R2NotifyClientOptions, "reconnect" | "reconnectDelayMs" | "debug">> &
+    Omit<R2NotifyClientOptions, "reconnect" | "reconnectDelayMs" | "debug"> & { clientId: string };
   private reconnectTimer?: number;
   private closedByUser = false;
   private isConnected = false;
@@ -20,7 +19,6 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
       token: options.token,
       reconnect: options.reconnect ?? true,
       reconnectDelayMs: options.reconnectDelayMs ?? 1500,
-      heartbeatMs: options.heartbeatMs ?? 30000,
       debug: options.debug ?? false,
     };
     this.conn = new Connection(this.opts.url, this.opts.clientId, this.opts.token, this.opts.debug);
@@ -51,13 +49,11 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
     const onOpen = () => {
       if (this.opts.debug) console.log("[r2 client] connected");
       this.emit("connected"); // payload: void
-      this.startHeartbeat();
     };
 
     const onClose = (_ev: CloseEvent) => {
       if (this.opts.debug) console.log("[r2 client] disconnected");
       this.emit("disconnected"); // payload: void
-      this.stopHeartbeat();
       if (!this.closedByUser && this.opts.reconnect) {
         this.scheduleReconnect();
       }
@@ -85,27 +81,8 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
     }, this.opts.reconnectDelayMs) as unknown as number;
   }
 
-  private startHeartbeat() {
-    this.stopHeartbeat();
-    this.heartbeatTimer = setInterval(() => {
-      try {
-        this.conn.send({ type: "ping", ts: Date.now() });
-      } catch {
-        // ignore
-      }
-    }, this.opts.heartbeatMs) as unknown as number;
-  }
-
-  private stopHeartbeat() {
-    if (this.heartbeatTimer) {
-      clearInterval(this.heartbeatTimer);
-      this.heartbeatTimer = undefined;
-    }
-  }
-
   close() {
     this.closedByUser = true;
-    this.stopHeartbeat();
     this.conn.close(1000, "client-close");
   }
 

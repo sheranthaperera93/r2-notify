@@ -5,19 +5,22 @@ import {
   Button,
   IconButton,
   Popover,
+  ToggleButton,
   Typography,
 } from "@mui/material";
 import {
   Notifications,
   NotificationsOffOutlined,
   NotificationsOutlined,
+  RefreshOutlined,
+  SettingsOutlined,
 } from "@mui/icons-material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNotifications, useNotifyActions } from "r2-notify-react";
 import { NotificationApp, NotificationMessage } from "r2-notify-client";
 import { deDuplicateAndSort, groupNotifications } from "./utils";
 import AppAccordion from "./AppAccordion";
-import ConfigurationPanel from "../ConfigurationPanel";
+import ConfigurationPanel from "./ConfigurationPanel";
 
 export default function NotificationPanel() {
   const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
@@ -125,10 +128,6 @@ export default function NotificationPanel() {
     actions?.deleteNotification?.(id);
   };
 
-  const handleSettingsClick = () => {
-    setVisibleSettings((prev) => !prev);
-  };
-
   return (
     <>
       <IconButton
@@ -150,7 +149,7 @@ export default function NotificationPanel() {
         anchorEl={anchorEl}
         onClose={handleClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        slotProps={{ paper: { sx: { maxWidth: 500, minWidth: 400 } } }}
+        slotProps={{ paper: { sx: { width: 400 } } }}
       >
         <Box sx={{ flex: 1 }}>
           {!isConnected && (
@@ -196,26 +195,25 @@ export default function NotificationPanel() {
                 }}
               >
                 <Button
-                  size="small"
+                  size="medium"
                   variant="outlined"
                   color="inherit"
                   title="Reload Notifications"
                   onClick={handleRefresh}
+                  startIcon={<RefreshOutlined />}
                 >
                   Reload
                 </Button>
-                <Button
+                <ToggleButton
+                  value="left"
+                  aria-label="left aligned"
                   size="small"
-                  variant="outlined"
-                  color="inherit"
-                  title="Reload Notifications"
-                  onClick={handleSettingsClick}
-                  sx={{
-                    ml: 1,
-                  }}
+                  sx={{ ml: 1 }}
+                  onClick={() => setVisibleSettings((prev) => !prev)}
+                  selected={visibleSettings}
                 >
-                  Settings
-                </Button>
+                  <SettingsOutlined />
+                </ToggleButton>
               </Box>
 
               {visibleSettings && <ConfigurationPanel />}
@@ -236,7 +234,9 @@ export default function NotificationPanel() {
                         color="#b1a9a9"
                         sx={{ mt: 1 }}
                       >
-                        Notifications will appear here when received
+                        Check if notifications are enabled in the settings
+                        panel, or else notifications will appear here when
+                        received.
                       </Typography>
                     </Box>
                   ) : (

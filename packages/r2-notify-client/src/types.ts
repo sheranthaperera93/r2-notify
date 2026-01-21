@@ -35,7 +35,7 @@ export interface R2NotifyClientOptions {
   token?: string;
   reconnect?: boolean;
   reconnectDelayMs?: number;
-  heartbeatMs?: number;
+  // heartbeatMs?: number;
   debug?: boolean;
 }
 

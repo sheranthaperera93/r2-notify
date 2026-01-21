@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNotifications, useNotifyActions } from "r2-notify-react";
 import {
   Box,
@@ -16,6 +16,9 @@ interface Configuration {
 const ConfigurationPanel: React.FC = () => {
   const { listConfigurations: configuration } = useNotifications();
   const { setNotificationStatus } = useNotifyActions();
+  const [isEnabled, setIsEnabled] = useState<boolean>(
+    configuration?.enableNotification ?? false,
+  );
 
   const configList = configuration ? (configuration as Configuration) : {};
   const configEntries = Object.entries(configList);
@@ -23,34 +26,24 @@ const ConfigurationPanel: React.FC = () => {
   const handleEnableConfigChange = (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const isEnabled = event.target.checked;
-    if (configuration) setNotificationStatus(isEnabled);
+    const newValue = event.target.checked;
+    setIsEnabled(newValue);
+    if (configuration) {
+      setNotificationStatus(newValue);
+    }
   };
 
-  return (
-    <Card className="card">
-      <Typography variant="h6">⚙️ Configuration</Typography>
+  useEffect(() => {
+    if (configuration?.enableNotification !== undefined) {
+      setIsEnabled(configuration.enableNotification);
+    }
+  }, [configuration?.enableNotification]);
 
+  return (
+    <Box sx={{ padding: 2 }}>
       {configEntries.length > 0 && (
         <Box>
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2, mb: 2 }}
-          >
-            <FormLabel sx={{ minWidth: 150 }}>ID</FormLabel>
-            <TextField
-              id="config_id_field"
-              variant="standard"
-              fullWidth
-              value={configuration?.id}
-              placeholder="Unique socket identifier"
-              slotProps={{
-                inputLabel: { shrink: false },
-              }}
-            />
-          </Box>
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: 2, mt: 2, mb: 2 }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
             <FormLabel sx={{ minWidth: 150 }}>Client ID</FormLabel>
             <TextField
               id="config_user_id_field"
@@ -68,14 +61,25 @@ const ConfigurationPanel: React.FC = () => {
           >
             <FormLabel sx={{ minWidth: 140 }}>Enable Notifications</FormLabel>
             <Switch
-              checked={configuration?.enableNotification}
+              checked={isEnabled}
               onChange={handleEnableConfigChange}
-              title={`Notifications ${configuration?.enableNotification ? "enabled" : "disabled"}`}
+              title={`Notifications ${isEnabled ? "enabled" : "disabled"}`}
             />
           </Box>
         </Box>
       )}
-    </Card>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        }}
+      >
+        <Typography variant="caption" gutterBottom>
+          Powered by r2-notify
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 
