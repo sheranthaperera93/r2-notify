@@ -1,19 +1,13 @@
 import React from "react";
-import { NotificationMessage, R2NotifyClient } from "r2-notify-client";
+import { NotificationConfig, NotificationMessage, R2NotifyClient } from "r2-notify-client";
 import type { R2NotifyReactOptions, R2NotifyState } from "./types";
-import { NotificationConfig } from "r2-notify-client";
 import { R2NotifyContext } from "./context";
 
 export interface R2NotifyProviderProps extends R2NotifyReactOptions {
   children: React.ReactNode;
 }
 
-export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
-  children,
-  autoConnect = true,
-  clientId,
-  ...opts
-}) => {
+export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, autoConnect = true, clientId, ...opts }) => {
   const [state, setState] = React.useState<R2NotifyState>({
     isConnected: false,
   });
@@ -54,8 +48,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
      */
     const onListNotifications = (payload: NotificationMessage[]) => {
       if (!isMounted) return;
-      if (opts.debug)
-        console.debug("[r2-react] on list notifications", payload);
+      if (opts.debug) console.debug("[r2-react] on list notifications", payload);
       setState((s) => ({ ...s, listNotifications: payload }));
     };
 
@@ -80,8 +73,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
      */
     const onListConfigurations = (payload: NotificationConfig) => {
       if (!isMounted) return;
-      if (opts.debug)
-        console.debug("[r2-react] on list configurations", payload);
+      if (opts.debug) console.debug("[r2-react] on list configurations", payload);
       setState((s) => ({ ...s, listConfigurations: payload }));
     };
 
@@ -94,12 +86,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
 
     // Optional: expose internal state transitions via debug logs if needed
     if (opts.debug) {
-      console.log(
-        "[r2-react] provider mount; autoConnect =",
-        autoConnect,
-        "clientId =",
-        clientId
-      );
+      console.log("[r2-react] provider mount; autoConnect =", autoConnect, "clientId =", clientId);
     }
 
     if (autoConnect) {
@@ -135,21 +122,16 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
     return {
       markAsRead: () => client.markAsRead(),
       markAppAsRead: (appId: string) => client.markAppAsRead(appId),
-      markGroupAsRead: (appId: string, groupKey: string) =>
-        client.markGroupAsRead(appId, groupKey),
-      markNotificationAsRead: (id: string) =>
-        client.markNotificationAsRead(id),
+      markGroupAsRead: (appId: string, groupKey: string) => client.markGroupAsRead(appId, groupKey),
+      markNotificationAsRead: (id: string) => client.markNotificationAsRead(id),
 
       deleteNotifications: () => client.deleteNotifications(),
-      deleteAppNotifications: (appId: string) =>
-        client.deleteAppNotifications(appId),
-      deleteGroupNotifications: (appId: string, groupKey: string) =>
-        client.deleteGroupNotifications(appId, groupKey),
+      deleteAppNotifications: (appId: string) => client.deleteAppNotifications(appId),
+      deleteGroupNotifications: (appId: string, groupKey: string) => client.deleteGroupNotifications(appId, groupKey),
       deleteNotification: (id: string) => client.deleteNotification(id),
 
       reloadNotifications: () => client.reloadNotifications(),
-      setNotificationStatus: (enableNotification: boolean) =>
-        client.setNotificationStatus(enableNotification),
+      setNotificationStatus: (enableNotification: boolean) => client.setNotificationStatus(enableNotification),
     };
   }, []);
 
@@ -160,12 +142,8 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({
       state,
       actions,
     }),
-    [state, actions, clientId]
+    [state, actions, clientId],
   );
 
-  return (
-    <R2NotifyContext.Provider value={value}>
-      {children}
-    </R2NotifyContext.Provider>
-  );
+  return <R2NotifyContext.Provider value={value}>{children}</R2NotifyContext.Provider>;
 };

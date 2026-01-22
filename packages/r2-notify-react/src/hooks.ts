@@ -1,7 +1,6 @@
-
-import { useContext, useEffect, useMemo } from "react";
-import { R2NotifyContext } from "./context";
 import { NotifyEvent } from "r2-notify-client";
+import { useContext, useEffect } from "react";
+import { R2NotifyContext } from "./context";
 
 export function useR2Notify() {
   const ctx = useContext(R2NotifyContext);
@@ -66,4 +65,13 @@ export function useNotifications() {
 export function useNotifyActions() {
   const { actions } = useR2Notify();
   return actions;
+}
+
+/**
+ * Hook to get the R2NotifyClient instance directly.
+ * Useful for advanced use cases or custom event handling.
+ */
+export function useNotifyClient() {
+  const { client } = useR2Notify();
+  return client;
 }

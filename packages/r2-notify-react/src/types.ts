@@ -1,4 +1,3 @@
-
 import type { R2NotifyClientOptions, NotifyEvent, NotificationMessage, NotificationConfig } from "r2-notify-client";
 
 export type { NotifyEvent, R2NotifyClientOptions };
