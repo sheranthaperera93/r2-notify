@@ -1,2 +1,2 @@
 export * from "./types";
-export * from "./core/R2NotifyClient";
+export * from "./R2NotifyClient";

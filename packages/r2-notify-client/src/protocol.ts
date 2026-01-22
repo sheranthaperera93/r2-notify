@@ -1,4 +1,4 @@
-import type { ActionEnvelope, NotifyAction, NotifyEvent, ServerEventEnvelope } from "../types";
+import type { ActionEnvelope, NotifyAction, NotifyEvent, ServerEventEnvelope } from "./types";
 
 /**
  * Creates an ActionEnvelope with the given action and optional payload.

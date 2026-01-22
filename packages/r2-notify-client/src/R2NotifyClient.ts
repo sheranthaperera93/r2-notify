@@ -1,7 +1,7 @@
 import EventEmitter from "eventemitter3";
 import { Connection } from "./connection";
 import { makeAction, isServerEventEnvelope, type EventHandlers } from "./protocol";
-import type { R2NotifyClientOptions, NotifyAction, NotifyEvent, R2NotifyClientEvent } from "../types";
+import type { R2NotifyClientOptions, NotifyAction, NotifyEvent, R2NotifyClientEvent } from "./types";
 
 export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   private conn: Connection;
