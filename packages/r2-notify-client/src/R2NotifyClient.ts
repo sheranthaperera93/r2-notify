@@ -31,16 +31,18 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
 
     if (handlers) {
       for (const [evt, fn] of Object.entries(handlers)) {
-        this.on(evt as NotifyEvent, fn as any);
+        if (fn) {
+          this.on(evt as NotifyEvent, fn);
+        }
       }
     }
 
-    const onMessage = (data: any) => {
+    const onMessage = (data: unknown) => {
       if (isServerEventEnvelope(data)) {
         const { event } = data;
         const payload = "payload" in data ? data.payload : data.data;
         if (this.opts.debug) console.log("[r2 client] <-", event, payload);
-        this.emit(event as NotifyEvent, payload as any);
+        this.emit(event as NotifyEvent, payload as unknown);
       } else {
         if (this.opts.debug) console.warn("[r2 client] unknown message", data);
       }
