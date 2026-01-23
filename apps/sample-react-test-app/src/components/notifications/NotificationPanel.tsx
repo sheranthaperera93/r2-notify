@@ -138,7 +138,7 @@ export default function NotificationPanel() {
         color="inherit"
         aria-label="Notifications"
       >
-        <Badge badgeContent={notifications.length} color="error">
+        <Badge badgeContent={isConnected ? notifications.length : "!"} color="error">
           <Notifications />
         </Badge>
       </IconButton>

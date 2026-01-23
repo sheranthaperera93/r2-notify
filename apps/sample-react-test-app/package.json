@@ -14,8 +14,8 @@
     "@mui/icons-material": "^7.3.7",
     "@mui/material": "^7.3.7",
     "bootstrap": "^5.3.8",
-    "r2-notify-client": "*",
-    "r2-notify-react": "*",
+    "r2-notify-client": "^1.0.0",
+    "r2-notify-react": "^1.0.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^18.2.0"
