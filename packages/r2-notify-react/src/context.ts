@@ -1,4 +1,3 @@
-
 import React from "react";
 import type { R2NotifyClient } from "r2-notify-client";
 import type { R2NotifyState } from "./types";
@@ -7,6 +6,8 @@ export interface R2NotifyContextValue {
   client: R2NotifyClient | null;
   state: R2NotifyState;
   actions: {
+    connect: () => void;
+    disconnect: () => void;
     markAsRead: () => void;
     markAppAsRead: (appId: string) => void;
     markGroupAsRead: (appId: string, groupKey: string) => void;
