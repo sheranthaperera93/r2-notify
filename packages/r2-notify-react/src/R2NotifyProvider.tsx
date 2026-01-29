@@ -164,8 +164,6 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
     if (!client) {
       if (debug) console.warn("[r2-react] ⚠️ Actions created but client is null");
       return {
-        connect: () => console.warn("[r2-react] Client not ready"),
-        disconnect: () => console.warn("[r2-react] Client not ready"),
         markAsRead: () => console.warn("[r2-react] Client not ready"),
         markAppAsRead: () => console.warn("[r2-react] Client not ready"),
         markGroupAsRead: () => console.warn("[r2-react] Client not ready"),
@@ -180,19 +178,6 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
     }
 
     return {
-      connect: () => {
-        if (debug) console.log("[r2-react] 🚀 Manual connect called");
-        client.connect({});
-      },
-      disconnect: () => {
-        if (debug) console.log("[r2-react] 🛑 Manual disconnect called");
-        try {
-          client.close();
-        } finally {
-          // Ensure UI reflects disconnection even if there was no open socket
-          setState((s) => ({ ...s, isConnected: false }));
-        }
-      },
       markAsRead: () => client.markAsRead(),
       markAppAsRead: (appId: string) => client.markAppAsRead(appId),
       markGroupAsRead: (appId: string, groupKey: string) => client.markGroupAsRead(appId, groupKey),

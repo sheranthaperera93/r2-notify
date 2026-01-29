@@ -6,8 +6,6 @@ export interface R2NotifyContextValue {
   client: R2NotifyClient | null;
   state: R2NotifyState;
   actions: {
-    connect: () => void;
-    disconnect: () => void;
     markAsRead: () => void;
     markAppAsRead: (appId: string) => void;
     markGroupAsRead: (appId: string, groupKey: string) => void;
