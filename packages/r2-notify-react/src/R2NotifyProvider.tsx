@@ -52,7 +52,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const handleConnected = () => {
       if (!isMounted) return;
-      if (debug) console.log("[r2-react] ✅ handleConnected");
+      if (debug) console.log("[r2-react] handleConnected");
       setState((s) => ({ ...s, isConnected: true, lastError: undefined }));
     };
 
@@ -62,7 +62,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const handleClosed = () => {
       if (!isMounted) return;
-      if (debug) console.log("[r2-react] ❌ handleClosed");
+      if (debug) console.log("[r2-react] handleClosed");
       setState((s) => ({ ...s, isConnected: false }));
     };
 
@@ -74,7 +74,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const onListNotifications = (payload: NotificationMessage[]) => {
       if (!isMounted) return;
-      if (debug) console.debug("[r2-react] 📋 on list notifications", payload);
+      if (debug) console.debug("[r2-react] on list notifications", payload);
       setState((s) => ({ ...s, listNotifications: payload }));
     };
 
@@ -86,7 +86,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const onNewNotification = (payload: NotificationMessage) => {
       if (!isMounted) return;
-      if (debug) console.debug("[r2-react] 🔔 on new notification", payload);
+      if (debug) console.debug("[r2-react] on new notification", payload);
       if (!payload.id) return;
       setState((s) => ({ ...s, newNotification: payload }));
     };
@@ -99,7 +99,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const onListConfigurations = (payload: NotificationConfig) => {
       if (!isMounted) return;
-      if (debug) console.debug("[r2-react] ⚙️ on list configurations", payload);
+      if (debug) console.debug("[r2-react] on list configurations", payload);
       setState((s) => ({ ...s, listConfigurations: payload }));
     };
 
@@ -112,17 +112,17 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
 
     // Optional: expose internal state transitions via debug logs if needed
     if (debug) {
-      console.log("[r2-react] 🔧 provider mount; autoConnect:", autoConnect, "clientId:", clientId);
+      console.log("[r2-react] provider mount; autoConnect:", autoConnect, "clientId:", clientId);
     }
 
     if (autoConnect) {
-      if (debug) console.log("[r2-react] 🚀 Auto-connecting...");
+      if (debug) console.log("[r2-react] Auto-connecting...");
       client.connect({});
       const t = setTimeout(() => {
         if (isMounted) {
           const isOpen = client["conn"]?.isOpen?.() ?? false;
           if (debug) {
-            console.log("[r2-react] 📊 Connection check after 300ms - isOpen:", isOpen);
+            console.log("[r2-react] Connection check after 300ms - isOpen:", isOpen);
           }
           setState((s) => ({
             ...s,
@@ -131,7 +131,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
         }
       }, 300);
       return () => {
-        if (debug) console.log("[r2-react] 🧹 Cleanup - unmounting (autoConnect)");
+        if (debug) console.log("[r2-react] Cleanup - unmounting (autoConnect)");
         clearTimeout(t);
         isMounted = false;
         client.off("connected", handleConnected);
@@ -147,7 +147,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
     }
 
     return () => {
-      if (debug) console.log("[r2-react] 🧹 Cleanup - unmounting (manual)");
+      if (debug) console.log("[r2-react] Cleanup - unmounting (manual)");
       isMounted = false;
       client.off("connected", handleConnected);
       client.off("disconnected", handleClosed);
@@ -162,7 +162,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
     const client = clientRef.current;
 
     if (!client) {
-      if (debug) console.warn("[r2-react] ⚠️ Actions created but client is null");
+      if (debug) console.warn("[r2-react] Actions created but client is null");
       return {
         markAsRead: () => console.warn("[r2-react] Client not ready"),
         markAppAsRead: () => console.warn("[r2-react] Client not ready"),
