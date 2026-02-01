@@ -7,19 +7,43 @@ export interface R2NotifyProviderProps extends R2NotifyReactOptions {
   children: React.ReactNode;
 }
 
-export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, autoConnect = true, clientId, ...opts }) => {
+export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, autoConnect = true, clientId, url, debug = false, ...opts }) => {
   const [state, setState] = React.useState<R2NotifyState>({
     isConnected: false,
   });
 
   // Keep a stable client instance across renders while options remain the same
   const clientRef = React.useRef<R2NotifyClient | null>(null);
-  if (!clientRef.current) {
-    clientRef.current = new R2NotifyClient({ ...opts, clientId });
-  }
+
+  // Track when client is recreated to trigger actions re-memoization
+  const [clientVersion, setClientVersion] = React.useState(0);
 
   React.useEffect(() => {
-    const client = clientRef.current!;
+    // Clean up existing client
+    if (clientRef.current) {
+      if (debug) {
+        console.log("[r2-react] Cleaning up old client");
+      }
+      clientRef.current.close();
+      clientRef.current = null;
+    }
+
+    // Only create new client if we have a clientId
+    if (!clientId) {
+      setState({ isConnected: false });
+      return;
+    }
+
+    // Create new client with current props
+    if (debug) {
+      console.log("[r2-react] Creating new client with clientId =", clientId);
+    }
+    const client = new R2NotifyClient({ ...opts, url, debug, clientId });
+    clientRef.current = client;
+
+    // Increment version to trigger actions re-memoization
+    setClientVersion((v) => v + 1);
+
     let isMounted = true;
 
     /**
@@ -28,6 +52,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const handleConnected = () => {
       if (!isMounted) return;
+      if (debug) console.log("[r2-react] handleConnected");
       setState((s) => ({ ...s, isConnected: true, lastError: undefined }));
     };
 
@@ -37,6 +62,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const handleClosed = () => {
       if (!isMounted) return;
+      if (debug) console.log("[r2-react] handleClosed");
       setState((s) => ({ ...s, isConnected: false }));
     };
 
@@ -48,7 +74,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const onListNotifications = (payload: NotificationMessage[]) => {
       if (!isMounted) return;
-      if (opts.debug) console.debug("[r2-react] on list notifications", payload);
+      if (debug) console.debug("[r2-react] on list notifications", payload);
       setState((s) => ({ ...s, listNotifications: payload }));
     };
 
@@ -60,7 +86,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const onNewNotification = (payload: NotificationMessage) => {
       if (!isMounted) return;
-      if (opts.debug) console.debug("[r2-react] on new notification", payload);
+      if (debug) console.debug("[r2-react] on new notification", payload);
       if (!payload.id) return;
       setState((s) => ({ ...s, newNotification: payload }));
     };
@@ -73,7 +99,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      */
     const onListConfigurations = (payload: NotificationConfig) => {
       if (!isMounted) return;
-      if (opts.debug) console.debug("[r2-react] on list configurations", payload);
+      if (debug) console.debug("[r2-react] on list configurations", payload);
       setState((s) => ({ ...s, listConfigurations: payload }));
     };
 
@@ -85,40 +111,72 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
     client.on("listConfigurations", onListConfigurations);
 
     // Optional: expose internal state transitions via debug logs if needed
-    if (opts.debug) {
-      console.log("[r2-react] provider mount; autoConnect =", autoConnect, "clientId =", clientId);
+    if (debug) {
+      console.log("[r2-react] provider mount; autoConnect:", autoConnect, "clientId:", clientId);
     }
 
     if (autoConnect) {
+      if (debug) console.log("[r2-react] Auto-connecting...");
       client.connect({});
-      // Update connection state when onOpen fires (handled in client via heartbeat start)
-      // We don't have a direct onOpen event, so we set connected on first event or rely on heartbeat success.
-      // If you want a more explicit connected callback, you can enhance the client to emit 'connected' custom event.
-      // For now, we optimistically set connected after a small delay if no close occurred.
       const t = setTimeout(() => {
-        setState((s) => ({
-          ...s,
-          isConnected: client["conn"]?.isOpen?.() ?? s.isConnected,
-        }));
+        if (isMounted) {
+          const isOpen = client["conn"]?.isOpen?.() ?? false;
+          if (debug) {
+            console.log("[r2-react] Connection check after 300ms - isOpen:", isOpen);
+          }
+          setState((s) => ({
+            ...s,
+            isConnected: isOpen || s.isConnected,
+          }));
+        }
       }, 300);
-      return () => clearTimeout(t);
+      return () => {
+        if (debug) console.log("[r2-react] Cleanup - unmounting (autoConnect)");
+        clearTimeout(t);
+        isMounted = false;
+        client.off("connected", handleConnected);
+        client.off("disconnected", handleClosed);
+        client.off("listNotifications", onListNotifications);
+        client.off("newNotification", onNewNotification);
+        client.off("listConfigurations", onListConfigurations);
+        client.close();
+      };
+    } else {
+      // We’ve just (re)created a client that is not connected
+      setState((s) => ({ ...s, isConnected: false }));
     }
 
     return () => {
+      if (debug) console.log("[r2-react] Cleanup - unmounting (manual)");
       isMounted = false;
       client.off("connected", handleConnected);
       client.off("disconnected", handleClosed);
       client.off("listNotifications", onListNotifications);
       client.off("newNotification", onNewNotification);
       client.off("listConfigurations", onListConfigurations);
-      if (autoConnect) {
-        client.close();
-      }
+      client.close();
     };
-  }, [autoConnect, clientId, opts.debug]);
+  }, [autoConnect, clientId, debug, url]);
 
   const actions = React.useMemo(() => {
-    const client = clientRef.current!;
+    const client = clientRef.current;
+
+    if (!client) {
+      if (debug) console.warn("[r2-react] Actions created but client is null");
+      return {
+        markAsRead: () => console.warn("[r2-react] Client not ready"),
+        markAppAsRead: () => console.warn("[r2-react] Client not ready"),
+        markGroupAsRead: () => console.warn("[r2-react] Client not ready"),
+        markNotificationAsRead: () => console.warn("[r2-react] Client not ready"),
+        deleteNotifications: () => console.warn("[r2-react] Client not ready"),
+        deleteAppNotifications: () => console.warn("[r2-react] Client not ready"),
+        deleteGroupNotifications: () => console.warn("[r2-react] Client not ready"),
+        deleteNotification: () => console.warn("[r2-react] Client not ready"),
+        reloadNotifications: () => console.warn("[r2-react] Client not ready"),
+        setNotificationStatus: () => console.warn("[r2-react] Client not ready"),
+      };
+    }
+
     return {
       markAsRead: () => client.markAsRead(),
       markAppAsRead: (appId: string) => client.markAppAsRead(appId),
@@ -133,7 +191,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
       reloadNotifications: () => client.reloadNotifications(),
       setNotificationStatus: (enableNotification: boolean) => client.setNotificationStatus(enableNotification),
     };
-  }, []);
+  }, [clientVersion, debug]); // Re-memoize when client is recreated
 
   const value = React.useMemo(
     () => ({

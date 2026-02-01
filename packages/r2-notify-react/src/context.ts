@@ -1,4 +1,3 @@
-
 import React from "react";
 import type { R2NotifyClient } from "r2-notify-client";
 import type { R2NotifyState } from "./types";
