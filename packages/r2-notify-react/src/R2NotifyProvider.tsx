@@ -103,9 +103,24 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
       setState((s) => ({ ...s, listConfigurations: payload }));
     };
 
+    /**
+     * Called when an error occurs with the WebSocket connection
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handleError = (error: Error) => {
+      if (!isMounted) return;
+      if (debug) console.error("[r2-react] handleError", error);
+      setState((s) => ({
+        ...s,
+        isConnected: false,
+        lastError: error || "Connection error ocurred",
+      }));
+    };
+
     // Hook into client events
     client.on("connected", handleConnected);
     client.on("disconnected", handleClosed);
+    client.on("error", handleError);
     client.on("listNotifications", onListNotifications);
     client.on("newNotification", onNewNotification);
     client.on("listConfigurations", onListConfigurations);
@@ -151,6 +166,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
       isMounted = false;
       client.off("connected", handleConnected);
       client.off("disconnected", handleClosed);
+      client.off("error", handleError);
       client.off("listNotifications", onListNotifications);
       client.off("newNotification", onNewNotification);
       client.off("listConfigurations", onListConfigurations);

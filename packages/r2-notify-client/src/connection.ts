@@ -67,6 +67,13 @@ export class Connection {
      */
     ws.onclose = (ev) => {
       if (this.debug) console.log("[r2 client] closed", ev.code, ev.reason);
+
+      // if (ev.code === 1006 && !ev.wasClean) {
+      //   const connectionError = new Error("Unable to connect to server. Please check if the server is running and reachable.");
+      //   if (this.debug) console.error("[r2 client] connection error", connectionError);
+      //   onError?.(connectionError);
+      // }
+
       onClose(ev);
     };
     /**
