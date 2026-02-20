@@ -7,7 +7,8 @@ export interface R2NotifyProviderProps extends R2NotifyReactOptions {
   children: React.ReactNode;
 }
 
-export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, autoConnect = true, clientId, url, debug = false, ...opts }) => {
+
+export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, autoConnect = true, url, debug = false, ...opts }) => {
   const [state, setState] = React.useState<R2NotifyState>({
     isConnected: false,
   });
@@ -28,17 +29,17 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
       clientRef.current = null;
     }
 
-    // Only create new client if we have a clientId
-    if (!clientId) {
+    // Only create new client if required options are present
+    if (!opts.token) {
       setState({ isConnected: false });
       return;
     }
 
     // Create new client with current props
     if (debug) {
-      console.log("[r2-react] Creating new client with clientId =", clientId);
+      console.log("[r2-react] Creating new client with token");
     }
-    const client = new R2NotifyClient({ ...opts, url, debug, clientId });
+    const client = new R2NotifyClient({ ...opts, url, debug });
     clientRef.current = client;
 
     // Increment version to trigger actions re-memoization
@@ -106,14 +107,13 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
     /**
      * Called when an error occurs with the WebSocket connection
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleError = (error: Error) => {
       if (!isMounted) return;
       if (debug) console.error("[r2-react] handleError", error);
       setState((s) => ({
         ...s,
         isConnected: false,
-        lastError: error || "Connection error ocurred",
+        lastError: error || "Connection error occurred",
       }));
     };
 
@@ -127,7 +127,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
 
     // Optional: expose internal state transitions via debug logs if needed
     if (debug) {
-      console.log("[r2-react] provider mount; autoConnect:", autoConnect, "clientId:", clientId);
+      console.log("[r2-react] provider mount; autoConnect:", autoConnect, "token:", opts.token);
     }
 
     if (autoConnect) {
@@ -172,7 +172,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
       client.off("listConfigurations", onListConfigurations);
       client.close();
     };
-  }, [autoConnect, clientId, debug, url]);
+  }, [autoConnect, opts.token, debug, url]);
 
   const actions = React.useMemo(() => {
     const client = clientRef.current;
@@ -212,11 +212,11 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
   const value = React.useMemo(
     () => ({
       client: clientRef.current,
-      clientId,
+      token: opts.token,
       state,
       actions,
     }),
-    [state, actions, clientId],
+    [state, actions, opts.token],
   );
 
   return <R2NotifyContext.Provider value={value}>{children}</R2NotifyContext.Provider>;

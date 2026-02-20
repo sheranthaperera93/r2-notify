@@ -5,8 +5,7 @@ import type { R2NotifyClientOptions, NotifyAction, NotifyEvent, R2NotifyClientEv
 
 export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   private conn: Connection;
-  private opts: Required<Pick<R2NotifyClientOptions, "reconnect" | "reconnectDelayMs" | "debug">> &
-    Omit<R2NotifyClientOptions, "reconnect" | "reconnectDelayMs" | "debug"> & { clientId: string };
+  private opts: Required<Pick<R2NotifyClientOptions, "reconnect" | "reconnectDelayMs" | "debug">> & Omit<R2NotifyClientOptions, "reconnect" | "reconnectDelayMs" | "debug">;
   private reconnectTimer?: number;
   private closedByUser = false;
   private isConnected = false;
@@ -15,13 +14,12 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
     super();
     this.opts = {
       url: options.url,
-      clientId: options.clientId,
       token: options.token,
       reconnect: options.reconnect ?? true,
       reconnectDelayMs: options.reconnectDelayMs ?? 1500,
       debug: options.debug ?? false,
     };
-    this.conn = new Connection(this.opts.url, this.opts.clientId, this.opts.token, this.opts.debug);
+    this.conn = new Connection(this.opts.url, this.opts.token, this.opts.debug);
   }
 
   connect(handlers?: EventHandlers) {
@@ -78,7 +76,7 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = undefined;
       if (this.closedByUser) return;
-      this.conn = new Connection(this.opts.url, this.opts.clientId, this.opts.token, this.opts.debug);
+      this.conn = new Connection(this.opts.url, this.opts.token, this.opts.debug);
       this.connect(); // emits "connected" on success
     }, this.opts.reconnectDelayMs) as unknown as number;
   }

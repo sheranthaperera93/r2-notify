@@ -4,10 +4,6 @@ export type { NotifyEvent, R2NotifyClientOptions };
 
 export interface R2NotifyReactOptions extends R2NotifyClientOptions {
   /**
-   * Client ID used to identify this client.
-   */
-  clientId: string;
-  /**
    * Auto-connect on mount (default true).
    */
   autoConnect?: boolean;
