@@ -293,9 +293,6 @@ function NotificationComponent() {
     client.on('newNotification', (data) => {
       setNotifications((prev) => [...prev, data as NotificationMessage]);
     });
-    client.on('listConfigurations', (data) => {
-      setConfigurations((prev) => data as NotificationConfig[]);
-    });
 
     client.connect();
     return () => client.close();
