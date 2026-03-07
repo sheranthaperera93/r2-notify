@@ -7,7 +7,6 @@ export interface R2NotifyProviderProps extends R2NotifyReactOptions {
   children: React.ReactNode;
 }
 
-
 export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, autoConnect = true, url, debug = false, ...opts }) => {
   const [state, setState] = React.useState<R2NotifyState>({
     isConnected: false,
@@ -22,9 +21,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
   React.useEffect(() => {
     // Clean up existing client
     if (clientRef.current) {
-      if (debug) {
-        console.log("[r2-react] Cleaning up old client");
-      }
+      if (debug) console.log("[r2-react] Cleaning up old client");
       clientRef.current.close();
       clientRef.current = null;
     }
@@ -35,10 +32,8 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
       return;
     }
 
-    // Create new client with current props
-    if (debug) {
-      console.log("[r2-react] Creating new client with token");
-    }
+    if (debug) console.log("[r2-react] Creating new client with token");
+
     const client = new R2NotifyClient({ ...opts, url, debug });
     clientRef.current = client;
 
@@ -61,117 +56,92 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
      * Called when the WebSocket connection is closed.
      * Resets the internal state to indicate a disconnected state.
      */
-    const handleClosed = () => {
+    const handleDisconnected = () => {
       if (!isMounted) return;
-      if (debug) console.log("[r2-react] handleClosed");
+      if (debug) console.log("[r2-react] handleDisconnected");
       setState((s) => ({ ...s, isConnected: false }));
     };
 
     /**
      * Called when the client receives a list of notifications from the server.
-     * Sets the internal state with the received list of notifications.
-     * If the received payload is not an array, it is ignored.
-     * @param {NotificationMessage[]} payload - The list of notifications received from the server.
      */
-    const onListNotifications = (payload: NotificationMessage[]) => {
+    const handleListNotifications = (payload: unknown) => {
       if (!isMounted) return;
-      if (debug) console.debug("[r2-react] on list notifications", payload);
-      setState((s) => ({ ...s, listNotifications: payload }));
+      const notifications = payload as NotificationMessage[];
+      if (debug) console.debug("[r2-react] on list notifications", notifications);
+      setState((s) => ({ ...s, listNotifications: notifications }));
     };
 
     /**
      * Called when the client receives a new notification from the server.
-     * Sets the internal state with the received notification.
-     * If the received payload is not a valid notification (i.e., it lacks an ID), it is ignored.
-     * @param {NotificationMessage} payload - The new notification received from the server.
+     * Ignores payloads that lack an ID.
      */
-    const onNewNotification = (payload: NotificationMessage) => {
+    const handleNewNotification = (payload: unknown) => {
       if (!isMounted) return;
-      if (debug) console.debug("[r2-react] on new notification", payload);
-      if (!payload.id) return;
-      setState((s) => ({ ...s, newNotification: payload }));
+      const notification = payload as NotificationMessage;
+      if (debug) console.debug("[r2-react] on new notification", notification);
+      if (!notification.id) return;
+      setState((s) => ({ ...s, newNotification: notification }));
     };
 
     /**
      * Called when the client receives a list of configurations from the server.
-     * Sets the internal state with the received list of configurations.
-     * If the received payload is not a valid configuration (i.e., it lacks an ID), it is ignored.
-     * @param {NotificationConfig} payload - The list of configurations received from the server.
      */
-    const onListConfigurations = (payload: NotificationConfig) => {
+    const handleListConfigurations = (payload: unknown) => {
       if (!isMounted) return;
-      if (debug) console.debug("[r2-react] on list configurations", payload);
-      setState((s) => ({ ...s, listConfigurations: payload }));
+      const config = payload as NotificationConfig;
+      if (debug) console.debug("[r2-react] on list configurations", config);
+      setState((s) => ({ ...s, listConfigurations: config }));
     };
 
     /**
-     * Called when an error occurs with the WebSocket connection
+     * Called when an error occurs with the WebSocket connection.
      */
-    const handleError = (error: Error) => {
+    const handleError = (payload: unknown) => {
       if (!isMounted) return;
+      const error = payload instanceof Error ? payload : new Error("Connection error occurred");
       if (debug) console.error("[r2-react] handleError", error);
-      setState((s) => ({
-        ...s,
-        isConnected: false,
-        lastError: error || "Connection error occurred",
-      }));
+      setState((s) => ({ ...s, isConnected: false, lastError: error }));
     };
 
-    // Hook into client events
+    // Register event handlers directly on the client
+    // Note: client.connect() is called with no handlers to avoid double-registration
     client.on("connected", handleConnected);
-    client.on("disconnected", handleClosed);
+    client.on("disconnected", handleDisconnected);
     client.on("error", handleError);
-    client.on("listNotifications", onListNotifications);
-    client.on("newNotification", onNewNotification);
-    client.on("listConfigurations", onListConfigurations);
+    client.on("listNotifications", handleListNotifications);
+    client.on("newNotification", handleNewNotification);
+    client.on("listConfigurations", handleListConfigurations);
 
-    // Optional: expose internal state transitions via debug logs if needed
     if (debug) {
-      console.log("[r2-react] provider mount; autoConnect:", autoConnect, "token:", opts.token);
+      console.log("[r2-react] provider mount; autoConnect:", autoConnect, "token:", "" + opts.token?.slice(0, 4) + "...");
     }
+
+    const cleanup = () => {
+      isMounted = false;
+      client.off("connected", handleConnected);
+      client.off("disconnected", handleDisconnected);
+      client.off("error", handleError);
+      client.off("listNotifications", handleListNotifications);
+      client.off("newNotification", handleNewNotification);
+      client.off("listConfigurations", handleListConfigurations);
+      client.close();
+    };
 
     if (autoConnect) {
       if (debug) console.log("[r2-react] Auto-connecting...");
-      client.connect({});
-      const t = setTimeout(() => {
-        if (isMounted) {
-          const isOpen = client["conn"]?.isOpen?.() ?? false;
-          if (debug) {
-            console.log("[r2-react] Connection check after 300ms - isOpen:", isOpen);
-          }
-          setState((s) => ({
-            ...s,
-            isConnected: isOpen || s.isConnected,
-          }));
-        }
-      }, 300);
+      client.connect();
       return () => {
         if (debug) console.log("[r2-react] Cleanup - unmounting (autoConnect)");
-        clearTimeout(t);
-        isMounted = false;
-        client.off("connected", handleConnected);
-        client.off("disconnected", handleClosed);
-        client.off("listNotifications", onListNotifications);
-        client.off("newNotification", onNewNotification);
-        client.off("listConfigurations", onListConfigurations);
-        client.close();
+        cleanup();
       };
     } else {
-      // We’ve just (re)created a client that is not connected
       setState((s) => ({ ...s, isConnected: false }));
+      return () => {
+        if (debug) console.log("[r2-react] Cleanup - unmounting (manual)");
+        cleanup();
+      };
     }
-
-    return () => {
-      if (debug) console.log("[r2-react] Cleanup - unmounting (manual)");
-      isMounted = false;
-      client.off("connected", handleConnected);
-      client.off("disconnected", handleClosed);
-      client.off("error", handleError);
-      client.off("listNotifications", onListNotifications);
-      client.off("newNotification", onNewNotification);
-      client.off("listConfigurations", onListConfigurations);
-      client.close();
-    };
   }, [autoConnect, opts.token, debug, url]);
 
   const actions = React.useMemo(() => {
@@ -181,15 +151,15 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
       if (debug) console.warn("[r2-react] Actions created but client is null");
       return {
         markAsRead: () => console.warn("[r2-react] Client not ready"),
-        markAppAsRead: () => console.warn("[r2-react] Client not ready"),
-        markGroupAsRead: () => console.warn("[r2-react] Client not ready"),
-        markNotificationAsRead: () => console.warn("[r2-react] Client not ready"),
+        markAppAsRead: (_appId: string) => console.warn("[r2-react] Client not ready"),
+        markGroupAsRead: (_appId: string, _groupKey: string) => console.warn("[r2-react] Client not ready"),
+        markNotificationAsRead: (_id: string) => console.warn("[r2-react] Client not ready"),
         deleteNotifications: () => console.warn("[r2-react] Client not ready"),
-        deleteAppNotifications: () => console.warn("[r2-react] Client not ready"),
-        deleteGroupNotifications: () => console.warn("[r2-react] Client not ready"),
-        deleteNotification: () => console.warn("[r2-react] Client not ready"),
+        deleteAppNotifications: (_appId: string) => console.warn("[r2-react] Client not ready"),
+        deleteGroupNotifications: (_appId: string, _groupKey: string) => console.warn("[r2-react] Client not ready"),
+        deleteNotification: (_id: string) => console.warn("[r2-react] Client not ready"),
         reloadNotifications: () => console.warn("[r2-react] Client not ready"),
-        setNotificationStatus: () => console.warn("[r2-react] Client not ready"),
+        setNotificationStatus: (_enableNotification: boolean) => console.warn("[r2-react] Client not ready"),
       };
     }
 
@@ -207,7 +177,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
       reloadNotifications: () => client.reloadNotifications(),
       setNotificationStatus: (enableNotification: boolean) => client.setNotificationStatus(enableNotification),
     };
-  }, [clientVersion, debug]); // Re-memoize when client is recreated
+  }, [clientVersion, debug]);
 
   const value = React.useMemo(
     () => ({

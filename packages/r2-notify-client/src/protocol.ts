@@ -18,8 +18,8 @@ export function makeAction<TPayload = unknown>(action: NotifyAction, data?: TPay
  * @param x The value to check.
  * @returns True if x is a ServerEventEnvelope, false otherwise.
  */
-export function isServerEventEnvelope(x: any): x is ServerEventEnvelope {
-  return !!x && typeof x === "object" && typeof x.event === "string" && ("payload" in x || "data" in x);
+export function isServerEventEnvelope(x: unknown): x is ServerEventEnvelope {
+  return !!x && typeof x === "object" && typeof (x as Record<string, unknown>).event === "string" && "data" in x;
 }
 
-export type EventHandlers = Partial<Record<NotifyEvent, (payload: any) => void>>;
+export type EventHandlers = Partial<Record<NotifyEvent, (payload: unknown) => void>>;

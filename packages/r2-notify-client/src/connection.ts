@@ -1,7 +1,5 @@
-export type WSLike = WebSocket; // Browser WebSocket
-
 export class Connection {
-  private ws?: WSLike;
+  private ws?: WebSocket;
   private url: string;
   private token?: string;
   private debug: boolean;
@@ -10,7 +8,6 @@ export class Connection {
    * Creates a new Connection instance.
    *
    * @param {string} url - The URL of the WebSocket endpoint.
-   * @param {string} clientId - The unique identification of the client
    * @param {string} [token] - The authentication token to use for the connection. If not provided, the connection will not be authenticated.
    * @param {boolean} [debug=false] - Whether to enable debug logging for the connection.
    */
@@ -23,33 +20,30 @@ export class Connection {
   /**
    * Establishes a WebSocket connection to the specified URL.
    *
-   * @param {((data: any) => void)} onMessage - A callback function to handle incoming messages from the WebSocket connection.
+   * @param {((data: unknown) => void)} onMessage - A callback function to handle incoming messages from the WebSocket connection.
    * @param {((ev: CloseEvent) => void)} onClose - A callback function to handle the WebSocket connection being closed.
    * @param {(() => void)} [onOpen] - An optional callback function to handle the WebSocket connection being opened.
-   * @param {(() => void)} [onError] - An optional callback function to handle the WebSocket connection on error.
+   * @param {((ev: Event) => void)} [onError] - An optional callback function to handle the WebSocket connection on error.
    */
   connect(onMessage: (data: unknown) => void, onClose: (ev: CloseEvent) => void, onOpen?: () => void, onError?: (ev: Event) => void) {
-    if (this.token) this.token = encodeURIComponent(this.token);
-
     if (!this.token) {
       if (this.debug) console.error("[r2 client] no token provided");
       return;
     }
 
-    const webSocketUrl: string = `${this.url}?token=${this.token}`;
+    const encodedToken = encodeURIComponent(this.token);
+    const webSocketUrl = `${this.url}?token=${encodedToken}`;
     const ws = new WebSocket(webSocketUrl);
     this.ws = ws;
 
     /**
      * Called when the WebSocket connection is opened.
-     *
-     * If `debug` is true, logs a message to the console indicating that the connection is open.
-     * If `onOpen` is provided, calls it with no arguments.
      */
     ws.onopen = () => {
       if (this.debug) console.log("[r2 client] connected");
       onOpen?.();
     };
+
     /**
      * Handles incoming messages from the WebSocket connection.
      *
@@ -64,27 +58,17 @@ export class Connection {
         if (this.debug) console.warn("[r2 client] invalid json", e);
       }
     };
+
     /**
      * Called when the WebSocket connection is closed.
-     *
-     * If `debug` is true, logs a message to the console indicating that the connection is closed, including the close event code and reason.
-     * Calls the `onClose` callback with the close event.
      */
     ws.onclose = (ev) => {
       if (this.debug) console.log("[r2 client] closed", ev.code, ev.reason);
-
-      // if (ev.code === 1006 && !ev.wasClean) {
-      //   const connectionError = new Error("Unable to connect to server. Please check if the server is running and reachable.");
-      //   if (this.debug) console.error("[r2 client] connection error", connectionError);
-      //   onError?.(connectionError);
-      // }
-
       onClose(ev);
     };
+
     /**
      * Called when an error occurs with the WebSocket connection.
-     *
-     * If `debug` is true, logs an error message to the console with the error object.
      */
     ws.onerror = (err) => {
       if (this.debug) console.error("[r2 client] error", err);
@@ -96,7 +80,6 @@ export class Connection {
    * Sends a message to the WebSocket connection.
    *
    * @param {unknown} obj - The message to be sent. The object will be stringified with JSON.stringify() before being sent.
-   *
    * @throws {Error} If the WebSocket connection is not open, throws an error.
    */
   send(obj: unknown) {

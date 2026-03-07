@@ -12,17 +12,16 @@ export function useR2Notify() {
  * Subscribe to a server event in a React-safe way.
  * The provider already caches common slices, but this lets you listen to any event ad hoc.
  */
-export function useNotifyEvent<TPayload = unknown>(
-  event: NotifyEvent,
-  handler: (payload: TPayload) => void,
-) {
+export function useNotifyEvent<TPayload = unknown>(event: NotifyEvent, handler: (payload: TPayload) => void) {
   const { client } = useR2Notify();
 
   useEffect(() => {
     if (!client) return;
-    client.on(event, handler);
+    // Cast handler to match the emitter's (payload: unknown) => void signature
+    const listener = (payload: unknown) => handler(payload as TPayload);
+    client.on(event, listener);
     return () => {
-      client.off(event, handler);
+      client.off(event, listener);
     };
   }, [client, event, handler]);
 }
@@ -31,9 +30,9 @@ export function useNotifyEvent<TPayload = unknown>(
  * Convenience hook to access the cached state of the client.
  * The properties are:
  * - isConnected: boolean indicating the connection state
- * - listNotifications: array of NotificationMessage objects (can be empty)
+ * - listNotifications: array of NotificationMessage objects (can be undefined)
  * - newNotification: The latest NotificationMessage object (can be undefined)
- * - listConfigurations: array of NotificationConfig objects (can be empty)
+ * - listConfigurations: NotificationConfig object (can be undefined)
  * - lastError: Error object if a connection error occurred (can be undefined)
  */
 export function useNotifications() {

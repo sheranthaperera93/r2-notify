@@ -37,10 +37,9 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
 
     const onMessage = (data: unknown) => {
       if (isServerEventEnvelope(data)) {
-        const { event } = data;
-        const payload = "payload" in data ? data.payload : data.data;
+        const { event, data: payload } = data;
         if (this.opts.debug) console.log("[r2 client] <-", event, payload);
-        this.emit(event as NotifyEvent, payload as unknown);
+        this.emit(event as NotifyEvent, payload);
       } else {
         if (this.opts.debug) console.warn("[r2 client] unknown message", data);
       }
@@ -48,12 +47,12 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
 
     const onOpen = () => {
       if (this.opts.debug) console.log("[r2 client] connected");
-      this.emit("connected"); // payload: void
+      this.emit("connected");
     };
 
     const onClose = (_ev: CloseEvent) => {
       if (this.opts.debug) console.log("[r2 client] disconnected");
-      this.emit("disconnected"); // payload: void
+      this.emit("disconnected");
       if (!this.closedByUser && this.opts.reconnect) {
         this.scheduleReconnect();
       }
@@ -77,7 +76,7 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
       this.reconnectTimer = undefined;
       if (this.closedByUser) return;
       this.conn = new Connection(this.opts.url, this.opts.token, this.opts.debug);
-      this.connect(); // emits "connected" on success
+      this.connect();
     }, this.opts.reconnectDelayMs) as unknown as number;
   }
 
