@@ -1,6 +1,6 @@
 # r2-notify-react
 
-**React wrapper for `r2-notify-client`** — providing a context-driven, hook-based API for real-time notifications.
+**React wrapper for `r2-notify-client`** - providing a context-driven, hook-based API for real-time notifications.
 
 `r2-notify-react` is a lightweight React integration layer built on top of the core `r2-notify-client` WebSocket library. It manages the socket client lifecycle, listens to server events, caches commonly used notification data in React state, and exposes typed hooks for working with notifications safely and idiomatically.
 

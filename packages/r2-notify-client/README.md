@@ -120,7 +120,7 @@ client.emitAction('action', { key: 'value' });
 
 ### Events
 
-#### Lifecycle Events — use `.on()` / `.off()`
+#### Lifecycle Events - use `.on()` / `.off()`
 
 | Event | Payload | Description |
 |-------|---------|-------------|
@@ -128,7 +128,7 @@ client.emitAction('action', { key: 'value' });
 | `disconnected` | `void` | WebSocket connection closed |
 | `error` | `Error` | An error occurred |
 
-#### Notification Events — use `.on()` / `.off()` or `connect()` handlers
+#### Notification Events - use `.on()` / `.off()` or `connect()` handlers
 
 | Event | Payload | Description |
 |-------|---------|-------------|
