@@ -27,12 +27,12 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
     }
 
     // Only create new client if required options are present
-    if (!opts.token) {
+    if (!opts.apiKey) {
       setState({ isConnected: false });
       return;
     }
 
-    if (debug) console.log("[r2-react] Creating new client with token");
+    if (debug) console.log("[r2-react] Creating new client with apiKey");
 
     const client = new R2NotifyClient({ ...opts, url, debug });
     clientRef.current = client;
@@ -114,7 +114,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
     client.on("listConfigurations", handleListConfigurations);
 
     if (debug) {
-      console.log("[r2-react] provider mount; autoConnect:", autoConnect, "token:", "" + opts.token?.slice(0, 4) + "...");
+      console.log("[r2-react] provider mount; autoConnect:", autoConnect, "apiKey:", "" + opts.apiKey?.slice(0, 4) + "****");
     }
 
     const cleanup = () => {
@@ -142,7 +142,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
         cleanup();
       };
     }
-  }, [autoConnect, opts.token, debug, url]);
+  }, [autoConnect, opts.apiKey, debug, url]);
 
   const actions = React.useMemo(() => {
     const client = clientRef.current;
@@ -182,11 +182,11 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
   const value = React.useMemo(
     () => ({
       client: clientRef.current,
-      token: opts.token,
+      apiKey: opts.apiKey,
       state,
       actions,
     }),
-    [state, actions, opts.token],
+    [state, actions, opts.apiKey],
   );
 
   return <R2NotifyContext.Provider value={value}>{children}</R2NotifyContext.Provider>;

@@ -34,7 +34,7 @@ npm install r2-notify-react r2-notify-client
 - `r2-notify-react`:
   - Creates and owns a single client instance per provider
   - Subscribes to notification events and caches them in React state
-  - Re-creates the client if `url`, `token`, or `debug` props change
+  - Re-creates the client if `url`, `apiKey`, or `debug` props change
   - Exposes hooks for state, actions, and custom events
 
 ---
@@ -48,12 +48,7 @@ import { R2NotifyProvider } from "r2-notify-react";
 
 function App() {
   return (
-    <R2NotifyProvider
-      url="wss://notifications.example.com/ws"
-      token="your-auth-token"
-      autoConnect
-      debug
-    >
+    <R2NotifyProvider url="wss://notifications.example.com/ws" apiKey="your-api-key" autoConnect debug>
       <Dashboard />
     </R2NotifyProvider>
   );
@@ -66,16 +61,16 @@ function App() {
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `url` | `string` | *required* | WebSocket server URL |
-| `token` | `string` | *required* | Authentication token. Provider will not connect if absent |
-| `autoConnect` | `boolean` | `true` | Auto-connect on mount |
-| `reconnect` | `boolean` | `true` | Enable automatic reconnection on disconnect |
-| `reconnectDelayMs` | `number` | `1500` | Delay before reconnection attempt (ms) |
-| `debug` | `boolean` | `false` | Enable debug logging |
+| Prop               | Type      | Default    | Description                                  |
+| ------------------ | --------- | ---------- | -------------------------------------------- |
+| `url`              | `string`  | _required_ | WebSocket server URL                         |
+| `apiKey`           | `string`  | _required_ | API Key. Provider will not connect if absent |
+| `autoConnect`      | `boolean` | `true`     | Auto-connect on mount                        |
+| `reconnect`        | `boolean` | `true`     | Enable automatic reconnection on disconnect  |
+| `reconnectDelayMs` | `number`  | `1500`     | Delay before reconnection attempt (ms)       |
+| `debug`            | `boolean` | `false`    | Enable debug logging                         |
 
-> The provider will not attempt to connect if `token` is not provided. The client is automatically closed and cleaned up on unmount.
+> The provider will not attempt to connect if `apiKey` is not provided. The client is automatically closed and cleaned up on unmount.
 
 ---
 
@@ -86,24 +81,18 @@ function App() {
 Convenience hook for accessing cached notification state.
 
 ```ts
-const {
-  isConnected,
-  listNotifications,
-  newNotification,
-  listConfigurations,
-  lastError,
-} = useNotifications();
+const { isConnected, listNotifications, newNotification, listConfigurations, lastError } = useNotifications();
 ```
 
 #### State Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `isConnected` | `boolean` | Current WebSocket connection status |
-| `listNotifications` | `NotificationMessage[] \| undefined` | Full list of notifications from the server |
-| `newNotification` | `NotificationMessage \| undefined` | Most recently pushed notification |
-| `listConfigurations` | `NotificationConfig \| undefined` | Notification configuration for this user |
-| `lastError` | `Error \| undefined` | Last connection or protocol error |
+| Field                | Type                                 | Description                                |
+| -------------------- | ------------------------------------ | ------------------------------------------ |
+| `isConnected`        | `boolean`                            | Current WebSocket connection status        |
+| `listNotifications`  | `NotificationMessage[] \| undefined` | Full list of notifications from the server |
+| `newNotification`    | `NotificationMessage \| undefined`   | Most recently pushed notification          |
+| `listConfigurations` | `NotificationConfig \| undefined`    | Notification configuration for this user   |
+| `lastError`          | `Error \| undefined`                 | Last connection or protocol error          |
 
 ---
 
@@ -128,18 +117,18 @@ const {
 
 #### Available Actions
 
-| Action | Signature | Description |
-|--------|-----------|-------------|
-| `markAsRead` | `() => void` | Mark all notifications as read |
-| `markAppAsRead` | `(appId: string) => void` | Mark all notifications for an app as read |
-| `markGroupAsRead` | `(appId: string, groupKey: string) => void` | Mark all notifications in a group as read |
-| `markNotificationAsRead` | `(id: string) => void` | Mark a single notification as read |
-| `deleteNotifications` | `() => void` | Delete all notifications |
-| `deleteAppNotifications` | `(appId: string) => void` | Delete all notifications for an app |
-| `deleteGroupNotifications` | `(appId: string, groupKey: string) => void` | Delete all notifications in a group |
-| `deleteNotification` | `(id: string) => void` | Delete a single notification |
-| `reloadNotifications` | `() => void` | Request a fresh notification list from the server |
-| `setNotificationStatus` | `(enableNotification: boolean) => void` | Enable or disable notifications for this user |
+| Action                     | Signature                                   | Description                                       |
+| -------------------------- | ------------------------------------------- | ------------------------------------------------- |
+| `markAsRead`               | `() => void`                                | Mark all notifications as read                    |
+| `markAppAsRead`            | `(appId: string) => void`                   | Mark all notifications for an app as read         |
+| `markGroupAsRead`          | `(appId: string, groupKey: string) => void` | Mark all notifications in a group as read         |
+| `markNotificationAsRead`   | `(id: string) => void`                      | Mark a single notification as read                |
+| `deleteNotifications`      | `() => void`                                | Delete all notifications                          |
+| `deleteAppNotifications`   | `(appId: string) => void`                   | Delete all notifications for an app               |
+| `deleteGroupNotifications` | `(appId: string, groupKey: string) => void` | Delete all notifications in a group               |
+| `deleteNotification`       | `(id: string) => void`                      | Delete a single notification                      |
+| `reloadNotifications`      | `() => void`                                | Request a fresh notification list from the server |
+| `setNotificationStatus`    | `(enableNotification: boolean) => void`     | Enable or disable notifications for this user     |
 
 ---
 
@@ -157,9 +146,9 @@ useNotifyEvent<NotificationMessage>("newNotification", (payload) => {
 
 **Parameters**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `event` | `NotifyEvent` | The event name to subscribe to |
+| Parameter | Type                          | Description                           |
+| --------- | ----------------------------- | ------------------------------------- |
+| `event`   | `NotifyEvent`                 | The event name to subscribe to        |
 | `handler` | `(payload: TPayload) => void` | Handler called with the typed payload |
 
 Valid event names are: `"listNotifications"` \| `"newNotification"` \| `"listConfigurations"`
@@ -170,7 +159,7 @@ Valid event names are: `"listNotifications"` \| `"newNotification"` \| `"listCon
 
 ### `useNotifyClient()`
 
-Direct access to the underlying `R2NotifyClient` instance. Returns `null` if the client has not been created yet (e.g. `token` is missing).
+Direct access to the underlying `R2NotifyClient` instance. Returns `null` if the client has not been created yet (e.g. `apikey` is missing).
 
 ```ts
 const client = useNotifyClient();
@@ -195,9 +184,9 @@ const { client, state, actions } = useR2Notify();
 
 ## Connection Lifecycle
 
-- The client is created when the provider mounts and `token` is present
+- The client is created when the provider mounts and `apiKey` is present
 - The client automatically connects if `autoConnect` is `true` (default)
-- If `url`, `token`, or `debug` props change, the existing client is closed and a new one is created
+- If `url`, `apiKey`, or `debug` props change, the existing client is closed and a new one is created
 - The client is closed and all event listeners are removed on unmount
 - Reconnection is handled automatically by `r2-notify-client` unless `reconnect: false` is set
 
@@ -208,20 +197,15 @@ const { client, state, actions } = useR2Notify();
 This package is written in TypeScript and exports the following types:
 
 ```ts
-import type {
-  R2NotifyReactOptions,
-  R2NotifyState,
-  NotifyEvent,
-  R2NotifyClientOptions,
-} from "r2-notify-react";
+import type { R2NotifyReactOptions, R2NotifyState, NotifyEvent, R2NotifyClientOptions } from "r2-notify-react";
 ```
 
-| Type | Description |
-|------|-------------|
-| `R2NotifyReactOptions` | Props accepted by `<R2NotifyProvider>` (extends `R2NotifyClientOptions`) |
-| `R2NotifyState` | Shape of the cached state returned by `useNotifications()` |
-| `NotifyEvent` | Union of server event name strings |
-| `R2NotifyClientOptions` | Re-exported from `r2-notify-client` |
+| Type                    | Description                                                              |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `R2NotifyReactOptions`  | Props accepted by `<R2NotifyProvider>` (extends `R2NotifyClientOptions`) |
+| `R2NotifyState`         | Shape of the cached state returned by `useNotifications()`               |
+| `NotifyEvent`           | Union of server event name strings                                       |
+| `R2NotifyClientOptions` | Re-exported from `r2-notify-client`                                      |
 
 ---
 
@@ -253,7 +237,7 @@ function NotificationList() {
 
 function App() {
   return (
-    <R2NotifyProvider url="wss://notifications.example.com/ws" token="your-auth-token">
+    <R2NotifyProvider url="wss://notifications.example.com/ws" apiKey="your-api-key">
       <NotificationList />
     </R2NotifyProvider>
   );
@@ -265,11 +249,13 @@ function App() {
 ## When to Use
 
 ✅ Use **r2-notify-react** if:
+
 - You are building a React application
 - You want automatic socket lifecycle handling
 - Notification data belongs in React state
 
 ❌ Use **r2-notify-client** directly if:
+
 - You are not using React
 - You need full manual socket control
 

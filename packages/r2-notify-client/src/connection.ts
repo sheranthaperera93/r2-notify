@@ -1,19 +1,19 @@
 export class Connection {
   private ws?: WebSocket;
   private url: string;
-  private token?: string;
+  private apiKey: string;
   private debug: boolean;
 
   /**
    * Creates a new Connection instance.
    *
    * @param {string} url - The URL of the WebSocket endpoint.
-   * @param {string} [token] - The authentication token to use for the connection. If not provided, the connection will not be authenticated.
+   * @param {string} [apiKey] - The authentication apiKey to use for the connection. If not provided, the connection will not be authenticated.
    * @param {boolean} [debug=false] - Whether to enable debug logging for the connection.
    */
-  constructor(url: string, token?: string, debug: boolean = false) {
+  constructor(url: string, apiKey: string, debug: boolean = false) {
     this.url = url;
-    this.token = token;
+    this.apiKey = apiKey;
     this.debug = debug;
   }
 
@@ -26,13 +26,13 @@ export class Connection {
    * @param {((ev: Event) => void)} [onError] - An optional callback function to handle the WebSocket connection on error.
    */
   connect(onMessage: (data: unknown) => void, onClose: (ev: CloseEvent) => void, onOpen?: () => void, onError?: (ev: Event) => void) {
-    if (!this.token) {
-      if (this.debug) console.error("[r2 client] no token provided");
+    if (!this.apiKey) {
+      if (this.debug) console.error("[r2 client] no apiKey provided");
       return;
     }
 
-    const encodedToken = encodeURIComponent(this.token);
-    const webSocketUrl = `${this.url}?token=${encodedToken}`;
+    const encodedApiKey = encodeURIComponent(this.apiKey);
+    const webSocketUrl = `${this.url}?apiKey=${encodedApiKey}`;
     const ws = new WebSocket(webSocketUrl);
     this.ws = ws;
 

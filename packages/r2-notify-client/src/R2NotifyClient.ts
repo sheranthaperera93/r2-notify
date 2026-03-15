@@ -14,12 +14,12 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
     super();
     this.opts = {
       url: options.url,
-      token: options.token,
+      apiKey: options.apiKey,
       reconnect: options.reconnect ?? true,
       reconnectDelayMs: options.reconnectDelayMs ?? 1500,
       debug: options.debug ?? false,
     };
-    this.conn = new Connection(this.opts.url, this.opts.token, this.opts.debug);
+    this.conn = new Connection(this.opts.url, this.opts.apiKey, this.opts.debug);
   }
 
   connect(handlers?: EventHandlers) {
@@ -75,7 +75,7 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = undefined;
       if (this.closedByUser) return;
-      this.conn = new Connection(this.opts.url, this.opts.token, this.opts.debug);
+      this.conn = new Connection(this.opts.url, this.opts.apiKey, this.opts.debug);
       this.connect();
     }, this.opts.reconnectDelayMs) as unknown as number;
   }

@@ -31,7 +31,7 @@ export interface ServerEventEnvelope<TEvent = NotifyEvent, TPayload = unknown> {
 
 export interface R2NotifyClientOptions {
   url: string;
-  token?: string;
+  apiKey: string;
   reconnect?: boolean;
   reconnectDelayMs?: number;
   // heartbeatMs?: number;

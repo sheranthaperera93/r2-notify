@@ -25,7 +25,7 @@ import { R2NotifyClient } from 'r2-notify-client';
 
 const client = new R2NotifyClient({
   url: 'wss://your-websocket-server.com',
-  token: 'your-auth-token',
+  apiKey: 'your-api-key',
   reconnect: true,
   reconnectDelayMs: 1500,
   debug: false
@@ -79,7 +79,7 @@ client.connect({
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `url` | `string` | *required* | WebSocket server URL |
-| `token` | `string` | *required* | Authentication token |
+| `apiKey` | `string` | *required* | API Key |
 | `reconnect` | `boolean` | `true` | Enable automatic reconnection |
 | `reconnectDelayMs` | `number` | `1500` | Delay before reconnection attempt (ms) |
 | `debug` | `boolean` | `false` | Enable debug logging |
@@ -177,7 +177,7 @@ client.setNotificationStatus(false); // disable
 ```typescript
 const client = new R2NotifyClient({
   url: 'wss://your-server.com',
-  token: 'your-auth-token',
+  apiKey: 'your-api-key',
   reconnect: false, // Disable auto-reconnect
 });
 
@@ -283,7 +283,7 @@ function NotificationComponent() {
 
   const [client] = useState(() => new R2NotifyClient({
     url: 'wss://your-server.com',
-    token: 'your-auth-token',
+    apiKey: 'your-api-key'
   }));
 
   useEffect(() => {
