@@ -13,25 +13,23 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
   constructor(options: R2NotifyClientOptions) {
     super();
     this.opts = {
-      url: options.url,
+      serverUrl: options.serverUrl,
       apiKey: options.apiKey,
       reconnect: options.reconnect ?? true,
       reconnectDelayMs: options.reconnectDelayMs ?? 1500,
       debug: options.debug ?? false,
     };
-    this.conn = new Connection(this.opts.url, this.opts.apiKey, this.opts.debug);
+    this.conn = new Connection(this.opts.serverUrl, this.opts.apiKey, this.opts.debug);
   }
 
-  connect(handlers?: EventHandlers) {
+  async connect(handlers?: EventHandlers) {
+    // now async
     if (this.isConnected) return this;
-
     this.isConnected = true;
 
     if (handlers) {
       for (const [evt, fn] of Object.entries(handlers)) {
-        if (fn) {
-          this.on(evt as NotifyEvent, fn);
-        }
+        if (fn) this.on(evt as NotifyEvent, fn);
       }
     }
 
@@ -60,12 +58,13 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
     };
 
     const onError = (err: Event | Error) => {
-      const errorObj = err instanceof Error ? err : new Error((err as Event)?.type ? `WebSocket error: ${(err as Event).type}` : "WebSocket error");
+      const errorObj = err instanceof Error ? err : new Error(`WebSocket error: ${(err as Event).type ?? "unknown"}`);
       if (this.opts.debug) console.error("[r2 client] ws error", errorObj);
       this.emit("error", errorObj);
+      this.isConnected = false; // reset so reconnect can retry
     };
 
-    this.conn.connect(onMessage, onClose, onOpen, onError);
+    await this.conn.connect(onMessage, onClose, onOpen, onError);
     return this;
   }
 
@@ -75,7 +74,8 @@ export class R2NotifyClient extends EventEmitter<R2NotifyClientEvent> {
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = undefined;
       if (this.closedByUser) return;
-      this.conn = new Connection(this.opts.url, this.opts.apiKey, this.opts.debug);
+      // Recreate connection — re-fetches a fresh token automatically
+      this.conn = new Connection(this.opts.serverUrl, this.opts.apiKey, this.opts.debug);
       this.connect();
     }, this.opts.reconnectDelayMs) as unknown as number;
   }

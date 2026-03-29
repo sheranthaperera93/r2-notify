@@ -7,7 +7,7 @@ export interface R2NotifyProviderProps extends R2NotifyReactOptions {
   children: React.ReactNode;
 }
 
-export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, autoConnect = true, url, debug = false, ...opts }) => {
+export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, autoConnect = true, serverUrl, debug = false, ...opts }) => {
   const [state, setState] = React.useState<R2NotifyState>({
     isConnected: false,
   });
@@ -34,7 +34,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
 
     if (debug) console.log("[r2-react] Creating new client with apiKey");
 
-    const client = new R2NotifyClient({ ...opts, url, debug });
+    const client = new R2NotifyClient({ ...opts, serverUrl, debug });
     clientRef.current = client;
 
     // Increment version to trigger actions re-memoization
@@ -142,7 +142,7 @@ export const R2NotifyProvider: React.FC<R2NotifyProviderProps> = ({ children, au
         cleanup();
       };
     }
-  }, [autoConnect, opts.apiKey, debug, url]);
+  }, [autoConnect, opts.apiKey, debug, serverUrl]);
 
   const actions = React.useMemo(() => {
     const client = clientRef.current;

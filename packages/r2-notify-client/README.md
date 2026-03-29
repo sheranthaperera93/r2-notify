@@ -1,6 +1,21 @@
 # r2-notify-client
 
-Framework-agnostic WebSocket notification client for r2-notify-server. Consumes real-time events and emits notification actions.
+Framework-agnostic TypeScript client for [r2-notify-server](https://github.com/sheranthaperera93/r2-notify-server). Connects over WebSocket and lets you receive real-time notifications and send actions back to the server.
+
+Works with React, Vue, Svelte, vanilla JS — or any environment that supports WebSocket and `fetch`.
+
+---
+
+## Features
+
+- 🔌 **Real-time notifications** over WebSocket
+- 🔐 **Secure auth** — two-step token exchange keeps your API key out of URLs
+- 🔄 **Automatic reconnection** with configurable delay
+- 🎯 **Fully typed** — written in TypeScript with exported types for everything
+- 🪶 **Lightweight** — only one dependency (`eventemitter3`)
+- 🎭 **Event-driven** — subscribe to server events and lifecycle changes with `.on()`
+
+---
 
 ## Installation
 
@@ -8,15 +23,7 @@ Framework-agnostic WebSocket notification client for r2-notify-server. Consumes 
 npm install r2-notify-client
 ```
 
-## Features
-
-- 🔌 **WebSocket-based real-time notifications**
-- 🔄 **Automatic reconnection** with configurable delay
-- 🎯 **Type-safe event handling** with TypeScript
-- 🪶 **Framework-agnostic** - works with React, Vue, vanilla JS, or any other framework
-- 📦 **Lightweight** with minimal dependencies
-- 🎭 **Event-driven architecture** using EventEmitter3
-- 🔐 **Token-based authentication**
+---
 
 ## Quick Start
 
@@ -24,85 +31,94 @@ npm install r2-notify-client
 import { R2NotifyClient } from 'r2-notify-client';
 
 const client = new R2NotifyClient({
-  url: 'wss://your-websocket-server.com',
+  serverUrl: 'https://your-r2-notify-server.com',
   apiKey: 'your-api-key',
-  reconnect: true,
-  reconnectDelayMs: 1500,
-  debug: false
 });
 
-// Register event listeners
-client.on('connected', () => {
-  console.log('Connected to notification server');
-});
-
-client.on('disconnected', () => {
-  console.log('Disconnected from server');
-});
+client.on('connected', () => console.log('Connected'));
+client.on('disconnected', () => console.log('Disconnected'));
+client.on('error', (err) => console.error('Error:', err));
 
 client.on('listNotifications', (notifications) => {
-  console.log('Received notifications:', notifications);
+  console.log('All notifications:', notifications);
 });
 
 client.on('newNotification', (notification) => {
-  console.log('New notification:', notification);
+  console.log('New notification arrived:', notification);
 });
 
-client.on('error', (error) => {
-  console.error('Connection error:', error);
-});
-
-// Connect
-client.connect();
+await client.connect();
 ```
 
-Alternatively, pass notification event handlers directly into `connect()`:
+You can also pass event handlers directly into `connect()`:
 
 ```typescript
-client.connect({
-  listNotifications: (notifications) => {
-    console.log('Received notifications:', notifications);
-  },
-  newNotification: (notification) => {
-    console.log('New notification:', notification);
-  },
-  listConfigurations: (configurations) => {
-    console.log('List configurations:', configurations);
-  }
+await client.connect({
+  listNotifications: (notifications) => { ... },
+  newNotification: (notification) => { ... },
+  listConfigurations: (config) => { ... },
 });
 ```
 
-> **Note:** `connect()` handlers only cover `NotifyEvent` types (`listNotifications`, `newNotification`, `listConfigurations`). For lifecycle events (`connected`, `disconnected`, `error`), use `.on()` directly.
+> **Note:** handlers passed to `connect()` only cover notification events (`listNotifications`, `newNotification`, `listConfigurations`). For lifecycle events (`connected`, `disconnected`, `error`) always use `.on()`.
 
-## Configuration Options
+---
+
+## How It Works
+
+The client performs a two-step connection automatically — you never need to manage this yourself:
+
+1. POSTs your API key to `{serverUrl}/ws-token` via HTTPS → receives a short-lived token
+2. Opens a WebSocket to `{serverUrl}/ws?token=<token>`
+
+The `serverUrl` protocol determines both connections:
+
+| `serverUrl` | Token endpoint | WebSocket |
+|---|---|---|
+| `http://localhost:8081` | `http://localhost:8081/ws-token` | `ws://localhost:8081/ws` |
+| `https://your-server.com` | `https://your-server.com/ws-token` | `wss://your-server.com/ws` |
+
+Your API key only ever travels in an HTTPS `Authorization` header — it never appears in a WebSocket URL.
+
+On every reconnect a fresh token is fetched automatically, so page refreshes, network drops, and tab restores all work without any extra handling on your end.
+
+---
+
+## Configuration
+
+```typescript
+new R2NotifyClient({
+  serverUrl: 'https://your-server.com', // required
+  apiKey: 'your-api-key',               // required
+  reconnect: true,                       // default true
+  reconnectDelayMs: 1500,               // default 1500
+  debug: false,                          // default false
+});
+```
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `url` | `string` | *required* | WebSocket server URL |
-| `apiKey` | `string` | *required* | API Key |
-| `reconnect` | `boolean` | `true` | Enable automatic reconnection |
-| `reconnectDelayMs` | `number` | `1500` | Delay before reconnection attempt (ms) |
-| `debug` | `boolean` | `false` | Enable debug logging |
+|---|---|---|---|
+| `serverUrl` | `string` | required | Base URL of your r2-notify-server instance |
+| `apiKey` | `string` | required | Your API key |
+| `reconnect` | `boolean` | `true` | Automatically reconnect when the connection drops |
+| `reconnectDelayMs` | `number` | `1500` | How long to wait before reconnecting (ms) |
+| `debug` | `boolean` | `false` | Print WebSocket activity to the console |
+
+---
 
 ## API Reference
 
 ### `connect(handlers?)`
 
-Opens the WebSocket connection. Optionally accepts a partial map of `NotifyEvent` handlers to register before connecting.
+Fetches a token and opens the WebSocket. Returns `this` for chaining. `async` — await it if you need to act after the token exchange completes.
 
 ```typescript
-client.connect();
-// or
-client.connect({
-  listNotifications: (data) => { ... },
-  newNotification: (data) => { ... },
-  listConfigurations: (data) => { ... },
-});
+await client.connect();
 ```
 
 ### `close()`
 
-Closes the WebSocket connection and disables auto-reconnect.
+Closes the connection and disables auto-reconnect.
 
 ```typescript
 client.close();
@@ -110,39 +126,41 @@ client.close();
 
 ### `emitAction(action, payload?)`
 
-Sends a custom action envelope to the server.
+Sends a raw action envelope to the server. Prefer the convenience methods below.
 
 ```typescript
-client.emitAction('action', { key: 'value' });
+client.emitAction('markNotificationAsRead', { id: 'abc123' });
 ```
 
 ---
 
-### Events
+## Events
 
-#### Lifecycle Events - use `.on()` / `.off()`
+### Lifecycle
+
+Use `.on()` and `.off()` to subscribe and unsubscribe.
 
 | Event | Payload | Description |
-|-------|---------|-------------|
+|---|---|---|
 | `connected` | `void` | WebSocket connection established |
 | `disconnected` | `void` | WebSocket connection closed |
-| `error` | `Error` | An error occurred |
+| `error` | `Error` | Connection or token fetch error |
 
-#### Notification Events - use `.on()` / `.off()` or `connect()` handlers
+### Notification
 
 | Event | Payload | Description |
-|-------|---------|-------------|
-| `listNotifications` | `NotificationMessage[]` | Full list of notifications received |
-| `newNotification` | `NotificationMessage` | A new notification pushed from server |
-| `listConfigurations` | `NotificationConfig` | Notification config received |
+|---|---|---|
+| `listNotifications` | `NotificationMessage[]` | Full notification list — sent on connect and after any action |
+| `newNotification` | `NotificationMessage` | A single notification pushed in real time |
+| `listConfigurations` | `NotificationConfig` | User notification config |
 
 ---
 
-### Actions
+## Actions
 
-Convenience methods that send action envelopes to the server.
+Convenience methods that send the corresponding action to the server. After each action the server responds with an updated `listNotifications` event.
 
-#### Mark as Read
+### Mark as read
 
 ```typescript
 client.markAsRead();
@@ -151,7 +169,7 @@ client.markGroupAsRead('app-id', 'group-key');
 client.markNotificationAsRead('notification-id');
 ```
 
-#### Delete Notifications
+### Delete
 
 ```typescript
 client.deleteNotifications();
@@ -160,64 +178,31 @@ client.deleteGroupNotifications('app-id', 'group-key');
 client.deleteNotification('notification-id');
 ```
 
-#### Other
+### Other
 
 ```typescript
-client.reloadNotifications();
-client.setNotificationStatus(true);  // enable
-client.setNotificationStatus(false); // disable
+client.reloadNotifications();          // request a fresh list from the server
+client.setNotificationStatus(true);    // enable notifications
+client.setNotificationStatus(false);   // disable notifications
 ```
 
 ---
 
-## Advanced Usage
-
-### Manual Connection Management
-
-```typescript
-const client = new R2NotifyClient({
-  url: 'wss://your-server.com',
-  apiKey: 'your-api-key',
-  reconnect: false, // Disable auto-reconnect
-});
-
-client.connect();
-// ... later
-client.close();
-```
-
-### Dynamic Event Listeners
-
-```typescript
-const handler = (notification) => {
-  console.log('New notification:', notification);
-};
-
-client.on('newNotification', handler);
-
-// Clean up when done
-client.off('newNotification', handler);
-```
-
----
-
-## TypeScript Support
-
-The package is fully typed. Import types as needed:
+## TypeScript Types
 
 ```typescript
 import type {
+  R2NotifyClientOptions,
   NotificationMessage,
-  NotificationApp,
   NotificationGroup,
+  NotificationApp,
   NotificationConfig,
-  R2NotifyClientOptions
+  NotifyEvent,
+  NotifyAction,
+  ActionEnvelope,
+  ServerEventEnvelope,
 } from 'r2-notify-client';
 ```
-
----
-
-## Data Types
 
 ### `NotificationMessage`
 
@@ -228,11 +213,21 @@ interface NotificationMessage {
   userId: string;
   groupKey: string;
   message: string;
-  status: "success" | "error" | "warning" | "info";
+  status: 'success' | 'error' | 'warning' | 'info';
   readStatus: boolean;
   createdAt: string;
   updatedAt: string;
 }
+```
+
+### `NotificationConfig`
+
+```typescript
+type NotificationConfig = {
+  id: string;
+  userId: string;
+  enableNotification: boolean;
+};
 ```
 
 ### `NotificationGroup`
@@ -258,71 +253,51 @@ interface NotificationApp {
 }
 ```
 
-### `NotificationConfig`
+---
+
+## Advanced Usage
+
+### Disable auto-reconnect
 
 ```typescript
-type NotificationConfig = {
-  id: string;
-  userId: string;
-  enableNotification: boolean;
+const client = new R2NotifyClient({
+  serverUrl: 'https://your-server.com',
+  apiKey: 'your-api-key',
+  reconnect: false,
+});
+```
+
+### Dynamic event listeners
+
+```typescript
+const handler = (notification: unknown) => {
+  console.log('New notification:', notification);
 };
+
+client.on('newNotification', handler);
+
+// Later — clean up
+client.off('newNotification', handler);
+```
+
+### Debug mode
+
+```typescript
+new R2NotifyClient({
+  serverUrl: 'https://your-server.com',
+  apiKey: 'your-api-key',
+  debug: true, // logs all WebSocket activity to the console
+});
 ```
 
 ---
 
-## Framework Examples
+## React
 
-### React (vanilla)
+For React projects, [`r2-notify-react`](https://www.npmjs.com/package/r2-notify-react) wraps this client with a provider and hooks (`useNotifications`, `useNotifyActions`, `useNotifyEvent`) so you don't need to manage the client instance yourself.
 
-```typescript
-import { useEffect, useState } from 'react';
-import { R2NotifyClient, NotificationMessage } from 'r2-notify-client';
-
-function NotificationComponent() {
-  const [notifications, setNotifications] = useState<NotificationMessage[]>([]);
-
-  const [client] = useState(() => new R2NotifyClient({
-    url: 'wss://your-server.com',
-    apiKey: 'your-api-key'
-  }));
-
-  useEffect(() => {
-    client.on('listNotifications', (data) => {
-      setNotifications(data as NotificationMessage[]);
-    });
-    client.on('newNotification', (data) => {
-      setNotifications((prev) => [...prev, data as NotificationMessage]);
-    });
-
-    client.connect();
-    return () => client.close();
-  }, [client]);
-
-  return (
-    <div>
-      {notifications.map((notif) => (
-        <div key={notif.id}>
-          {notif.message}
-          <button onClick={() => client.markNotificationAsRead(notif.id)}>
-            Mark as Read
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-}
-```
-
-> For React projects, consider using the **`r2-notify-react`** wrapper package which provides `<R2NotifyProvider>`, `useNotifications()`, `useNotifyActions()`, and `useNotifyEvent()` out of the box.
+---
 
 ## License
 
 MIT © Sherantha Perera
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Support
-
-For issues and questions, please open an issue on the GitHub repository.
